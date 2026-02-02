@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>HL1‑Style Menu — Games + Pixelsuft Launcher (Single File)</title>
+<style>
+  :root{
+    --bg-0:#07090a; --bg-1:#0b0e10;
+    --amber:#ffb000; --amber-soft:#ffc766; --hazard:#7af57a;
+    --txt:#d7d7d7; --muted:#8b8b8b; --border: rgba(255,176,0,.22);
+    --glow: drop-shadow(0 0 6px rgba(255,176,0,.65)) drop-shadow(0 0 18px rgba(255,176,0,.25));
+  }
+  *{ box-sizing:border-box }
+  html,body{ height:100% }
+  body{
+    margin:0; color:var(--txt);
+    font-family: system-ui, Segoe UI, Roboto, Helvetica, Arial, "Noto Sans", sans-serif;
+    background:
+      radial-gradient(1200px 1200px at 8% 8%, #0f1316 0%, transparent 58%),
+      radial-gradient(900px 900px at 92% 85%, #0b0e11 0%, transparent 55%),
+      linear-gradient(180deg, var(--bg-1), var(--bg-0));
+    overflow:hidden;
+  }
+
+  /* CRT overlay */
+  .crt{ position:fixed; inset:0; pointer-events:none; z-index:0; }
+  .crt::before{
+    content:""; position:absolute; inset:0; opacity:.35; mix-blend-mode: overlay;
+    background-image:
+      linear-gradient(transparent 31px, rgba(255,255,255,.03) 32px),
+      linear-gradient(90deg, rgba(255,176,0,.06) 1px, transparent 1px),
+      linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px);
+    background-size: 100% 32px, 64px 100%, 100% 2px;
+    animation: gridShift 18s linear infinite;
+  }
+  .crt::after{
+    content:""; position:absolute; inset:-2px; opacity:.18;
+    background: repeating-linear-gradient(transparent 0 2px, rgba(0,0,0,.26) 3px 4px);
+    animation: scan 6s linear infinite;
+  }
+  @keyframes scan{ 0%,100%{opacity:.18} 50%{opacity:.28} }
+  @keyframes gridShift{ 0%{transform:translateY(0)} 100%{transform:translateY(32px)} }
+
+  /* Left spine glow */
+  .spine{ position:fixed; left:0; top:0; bottom:0; width:9px; z-index:1;
+    background: linear-gradient(180deg, rgba(255,176,0,.5), rgba(255,176,0,.1));
+    box-shadow: 0 0 22px rgba(255,176,0,.35); opacity:.55;
+  }
+
+  /* Layout */
+  .grid{ position:relative; z-index:1; height:100%;
+    display:grid; grid-template-columns: 360px 1fr; gap:28px; padding:28px 28px 28px 24px;
+  }
+  @media (max-width: 900px){ .grid{ grid-template-columns: 1fr; gap:16px; padding:16px 16px 24px 12px } }
+
+  .sidebar{
+    display:flex; flex-direction:column;
+    border:1px solid var(--border); outline:1px solid rgba(255,176,0,.08); outline-offset:6px;
+    background: linear-gradient(180deg, rgba(255,176,0,.04), rgba(0,0,0,.2) 40%, rgba(0,0,0,.35));
+    box-shadow: inset 0 0 0 1px rgba(255,176,0,.07), 0 10px 40px rgba(0,0,0,.5), 0 0 80px rgba(255,176,0,.06);
+    padding:18px; min-height:0;
+  }
+
+  /* Logo / header with raster scan reveal */
+  .logo{ position:relative; overflow:hidden; user-select:none; margin-bottom:10px; }
+  .lambda{
+    font-size: clamp(56px, 9.5vw, 120px); font-weight:900; letter-spacing:.02em;
+    color: var(--amber); filter: var(--glow);
+    text-shadow: 0 0 2px rgba(255,176,0,.8), 0 0 26px rgba(255,176,0,.35), 0 0 52px rgba(255,176,0,.15);
+    opacity:0; transform: translateY(-8px);
+  }
+  .titleline{ color: var(--amber-soft); letter-spacing:.32em; text-transform:uppercase; font-weight:700;
+    margin-top:2px; opacity:0; transform: translateY(-6px);
+  }
+  .divider{ width:100%; height:2px; margin:10px 0 12px;
+    background: linear-gradient(90deg, var(--amber), transparent 70%); box-shadow:0 0 12px rgba(255,176,0,.35);
+    opacity:0; transform: translateY(-6px);
+  }
+  body.boot .lambda, body.boot .titleline, body.boot .divider{
+    opacity:1; transform:none; transition: opacity .7s ease, transform .7s ease;
+  }
+  .lambda::after{
+    content:""; position:absolute; left:0; right:0; height:48px; top:-64px;
+    background:
+      linear-gradient(180deg, rgba(255,255,255,.15), rgba(255,255,255,0) 75%),
+      repeating-linear-gradient(transparent 0 2px, rgba(255,255,255,.06) 3px 4px);
+    mix-blend-mode: screen; filter: blur(.3px); opacity:.85; pointer-events:none;
+    animation: scanBar 2.2s ease-out forwards 350ms;
+  }
+  @keyframes scanBar{
+    0%{ transform: translateY(0); opacity:.85 } 85%{ transform: translateY(170px); opacity:.9 }
+    100%{ transform: translateY(220px); opacity:0 }
+  }
+
+  /* Hazard LEDs */
+  .hazard-lights{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px; }
+  .led{
+    width:12px; height:12px; border-radius:50%;
+    background: radial-gradient(circle at 35% 35%, #fff, var(--hazard) 45%, #116611 65%, transparent 70%);
+    box-shadow: 0 0 10px rgba(122,245,122,.55), inset 0 0 4px rgba(255,255,255,.4);
+    border: 1px solid rgba(122,245,122,.45); opacity:.25; animation: ledPulse 2.8s infinite;
+  }
+  .led:nth-child(2){ animation-delay: .4s } .led:nth-child(3){ animation-delay: .9s }
+  .led:nth-child(4){ animation-delay: 1.6s } .led:nth-child(5){ animation-delay: 2.1s }
+  @keyframes ledPulse{ 0%,100%{opacity:.25} 10%{opacity:1; filter: drop-shadow(0 0 6px rgba(122,245,122,.8)) } 50%{opacity:.4} }
+
+  /* Menu */
+  .menu-title{ color:var(--amber-soft); filter: var(--glow); font-weight:700; letter-spacing:.25em; text-transform:uppercase; margin-bottom:6px; }
+  .menu{ list-style:none; margin:0; padding:0; min-height:0; }
+  .menu li{
+    position:relative; font-size:clamp(16px,2.1vw,22px); letter-spacing:.18em; text-transform:uppercase;
+    padding:14px 12px; color:#cfcfcf; border:1px solid rgba(255,176,0,.12);
+    background: linear-gradient(180deg, rgba(255,176,0,.02), transparent 55%); margin:10px 0;
+    cursor:pointer; outline:none;
+    transition: transform .18s ease, color .15s ease, background .18s ease, text-shadow .15s ease, border-color .15s ease, box-shadow .18s ease, opacity .3s ease;
+    transform: translateX(-18px); opacity:0;
+  }
+  .menu.ready li{ opacity:1; transform: translateX(0) }
+  .menu li:nth-child(1){ transition-delay:.05s } .menu li:nth-child(2){ transition-delay:.12s }
+  .menu li:nth-child(3){ transition-delay:.19s } .menu li:nth-child(4){ transition-delay:.26s }
+  .menu li:nth-child(5){ transition-delay:.33s } .menu li:nth-child(6){ transition-delay:.40s }
+  .menu li:nth-child(7){ transition-delay:.47s } .menu li:nth-child(8){ transition-delay:.54s }
+  .menu li:nth-child(9){ transition-delay:.61s } .menu li:nth-child(10){ transition-delay:.68s }
+  .menu li:nth-child(11){ transition-delay:.75s }
+
+  .menu li::after{ content:""; position:absolute; inset:0; border:1px solid rgba(255,176,0,.07); pointer-events:none; }
+  .menu li:hover, .menu li:focus{
+    color:#fff4dd; border-color: rgba(255,176,0,.35);
+    text-shadow: 0 0 6px rgba(255,176,0,.85), 0 0 18px rgba(255,176,0,.45), 0 0 42px rgba(255,176,0,.25);
+    background: linear-gradient(180deg, rgba(255,176,0,.06), rgba(255,176,0,.015) 70%);
+    transform: translateX(6px) scale(1.01); box-shadow: 0 8px 28px rgba(255,176,0,.08);
+  }
+  .menu li:active{ transform: translateX(2px) scale(.995); filter: brightness(.96) }
+
+  .controls{ display:flex; gap:10px; flex-wrap:wrap; margin-top:14px; }
+  .btn{
+    appearance:none; border:none; cursor:pointer; padding:10px 12px;
+    text-transform:uppercase; letter-spacing:.22em; font-weight:700;
+    background:#141414; color:#efefef; border:1px solid var(--border);
+    box-shadow: inset 0 0 0 1px rgba(255,176,0,.07);
+    transition: transform .15s ease, filter .15s ease, color .15s ease, border-color .15s ease;
+  }
+  .btn:hover{ color:#fff3da; border-color: rgba(255,176,0,.5); filter: drop-shadow(0 0 6px rgba(255,176,0,.6)); transform: translateY(-1px) }
+  .btn:active{ transform: translateY(0) scale(.99) }
+  .btn.secondary{ color:#c9c9c9; border-color: rgba(255,176,0,.15) }
+
+  .status{ margin-top:10px; color:var(--muted); font-size:.9rem; letter-spacing:.12em; }
+
+  /* Right info pane */
+  .pane{
+    border:1px solid var(--border); outline:1px solid rgba(255,176,0,.08); outline-offset:6px;
+    background:
+      linear-gradient(180deg, rgba(255,176,0,.03), rgba(0,0,0,.22) 40%, rgba(0,0,0,.35)),
+      radial-gradient(600px 240px at 30% 15%, rgba(255,176,0,.06), transparent 70%);
+    box-shadow: inset 0 0 0 1px rgba(255,176,0,.06), 0 10px 40px rgba(0,0,0,.5), 0 0 80px rgba(255,176,0,.06);
+    padding:18px; display:flex; gap:18px;
+  }
+  .tabs{ display:flex; flex-direction:column; gap:10px; min-width:120px; }
+  .tab{ padding:10px 12px; text-transform:uppercase; letter-spacing:.18em; font-weight:700; color:#cfcfcf; background:#121212; border:1px solid rgba(255,176,0,.12) }
+  .tab.active{ color:#fff3da; border-color: rgba(255,176,0,.35); filter: drop-shadow(0 0 6px rgba(255,176,0,.6)) }
+  .pane-content{ flex:1; min-width:0; display:flex; flex-direction:column; gap:8px }
+  .pane-title{ color:var(--amber-soft); filter: var(--glow); text-transform:uppercase; letter-spacing:.26em; font-weight:700 }
+  .pane-text{ color:#bdbdbd; max-width:70ch }
+
+  /* ------- OVERLAYS ------- */
+  .hidden{ display:none !important }
+  /* Base dock style (reused) */
+  .dock{
+    position:fixed; inset:24px; z-index:3; display:flex; flex-direction:column;
+    background: #0a0c0e;
+    border:1px solid var(--border); outline:1px solid rgba(255,176,0,.08); outline-offset:6px;
+    box-shadow: inset 0 0 0 1px rgba(255,176,0,.06), 0 20px 80px rgba(0,0,0,.65), 0 0 120px rgba(255,176,0,.06);
+  }
+  .game-toolbar{
+    display:flex; align-items:center; gap:10px; padding:10px;
+    background: linear-gradient(180deg, rgba(255,176,0,.05), rgba(0,0,0,.15));
+    border-bottom:1px solid rgba(255,176,0,.18);
+  }
+  .game-toolbar .title{ color:var(--amber-soft); letter-spacing:.24em; text-transform:uppercase; font-weight:800; margin-right:auto; filter: var(--glow) }
+  .game-toolbar .input{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; min-width:0; }
+  .game-toolbar input[type="url"]{
+    width: min(48vw, 680px); max-width: 100%;
+    background:#0e1113; color:#f0f0f0; border:1px solid rgba(255,176,0,.22);
+    padding:8px 10px; letter-spacing:.03em;
+  }
+  .dock-body{ flex:1; min-height:0; position:relative }
+  .dock-hint{
+    position:absolute; inset:0; display:grid; place-items:center; text-align:center;
+    color:#cfcfcf; padding:24px; pointer-events:none;
+  }
+  .game-frame{
+    position:absolute; inset:0; width:100%; height:100%; border:none; background:#000;
+  }
+
+  /* Mini‑game dock specifics */
+  #miniDock canvas{
+    display:block; margin:auto; background:#000; image-rendering: pixelated;
+  }
+  /* Roulette UI inside mini dock */
+  #rouletteUI{
+    position:absolute; inset:0; display:grid; place-items:center; color:#ffb000; text-align:center;
+  }
+  #rouletteUI .panel{
+    background:#0f1113; border:1px solid var(--border); padding:18px; max-width:520px;
+    box-shadow: inset 0 0 0 1px rgba(255,176,0,.06);
+  }
+  #rouletteUI h2{ margin:.3rem 0 .6rem; letter-spacing:.22em; text-transform:uppercase }
+
+  /* ------- WIKIPEDIA DRAWER ------- */
+  #wikiDrawer{
+    position:fixed; left:0; width:100%; height:70%;
+    bottom:-70%; z-index:5; transition:bottom .4s ease;
+    background:#000; border-top:2px solid var(--amber);
+    box-shadow: 0 -18px 80px rgba(0,0,0,.55);
+  }
+  #wikiDrawer.open{ bottom:0 }
+  #wikiTab{
+    background:#000; color:var(--amber); text-align:center; padding:10px; cursor:pointer;
+    font-weight:800; letter-spacing:.3em; border-bottom:1px solid var(--amber); user-select:none;
+  }
+  #wikiContent{ position:relative; height:calc(100% - 42px); }
+  #wikiFrame{ position:absolute; inset:0; width:100%; height:100%; border:none; background:#000 }
+  #wikiOverlay{ pointer-events:none; position:absolute; inset:0; }
+
+  /* Reduced motion */
+  @media (prefers-reduced-motion: reduce){
+    .menu li, .menu.ready li{ transition:none; transform:none; opacity:1 }
+    .crt::before, .crt::after, .lambda::after{ animation:none }
+    .lambda, .titleline, .divider{ transition:none; opacity:1; transform:none }
+  }
+</style>
+</head>
+<body>
+  <div class="spine" aria-hidden="true"></div>
+  <div class="crt" aria-hidden="true"></div>
+
+  <main class="grid" role="main">
+    <!-- LEFT SIDEBAR -->
+    <aside class="sidebar" aria-label="Navigation">
+      <div class="logo">
+        <div class="lambda">λ INTERFACE</div>
+        <div class="titleline">Black‑Mesa‑Era Menu Mock</div>
+        <div class="divider" aria-hidden="true"></div>
+      </div>
+
+      <div class="hazard-lights" aria-hidden="true">
+        <div class="led"></div><div class="led"></div><div class="led"></div><div class="led"></div><div class="led"></div>
+      </div>
+
+      <div class="menu-title">Main Menu</div>
+      <ul class="menu" id="menu">
+        <li data-action="pixelsuft" data-hint="Launch Pixelsuft HL (browser port)">New Game</li>
+        <li data-action="snake"     data-hint="Built-in Snake (HTML5)">Snake</li>
+        <li data-action="pong"      data-hint="Built-in Pong (HTML5)">Pong</li>
+        <li data-action="breakout"  data-hint="Built-in Breakout (HTML5)">Breakout</li>
+        <li data-action="flappy"    data-hint="Built-in Flappy (HTML5)">Flappy</li>
+        <li data-action="2048"      data-hint="Built-in 2048 (Arrow keys)">2048</li>
+        <li data-action="roulette"  data-hint="Safe, fictional chance game with high score">Russian Roulette</li>
+        <li data-action="wiki"      data-hint="Open HL1 Wikipedia drawer">HL1 Database</li>
+        <li data-action="options"   data-hint="Change video, audio, input (placeholder)">Options</li>
+        <li data-action="quit"      data-hint="Exit (placeholder)">Quit</li>
+      </ul>
+
+      <div class="controls">
+        <button class="btn" id="musicBtn" aria-pressed="false" aria-label="Toggle music">MUSIC: OFF</button>
+        <button class="btn" id="sfxBtn" aria-pressed="true" aria-label="Toggle UI sounds">SFX: ON</button>
+        <button class="btn secondary" id="fxBtn" aria-pressed="true" aria-label="Toggle scanlines">SCANLINES: ON</button>
+      </div>
+      <div class="status" id="status" aria-live="polite">
+        Tip: Use ↑/↓ then Enter. Hover items to see the glow.
+      </div>
+    </aside>
+
+    <!-- RIGHT PANE -->
+    <section class="pane" aria-label="Information Pane">
+      <nav class="tabs" aria-label="Sections">
+        <div class="tab active" aria-current="page">System</div>
+        <div class="tab">Audio</div>
+        <div class="tab">Video</div>
+        <div class="tab">Input</div>
+      </nav>
+      <div class="pane-content">
+        <div class="pane-title">Welcome</div>
+        <div class="pane-text">
+          • **New Game** opens a **Pixelsuft HL** web launcher (Xash3D‑FWGS WebAssembly).  
+          • Built‑in games: **Snake, Pong, Breakout, Flappy, 2048, Russian Roulette** (fictional; high score).  
+          • **HL1 Database** opens a bottom drawer with the Half‑Life (1998) Wikipedia page and orange binary overlay.
+        </div>
+        <div class="pane-text" style="color:#a9a9a9">
+          If the external page refuses to embed, click **Open in New Tab**. Provide your own HL data if the web build requires it.
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- EXTERNAL (Pixelsuft) DOCK -->
+  <section id="gameDock" class="dock hidden" role="dialog" aria-modal="true" aria-label="Pixelsuft HL Launcher">
+    <div class="game-toolbar">
+      <div class="title">HL1 Web Launcher</div>
+      <div class="input">
+        <label for="gameUrl" style="letter-spacing:.12em; text-transform:uppercase; color:#dcdcdc;">URL</label>
+        <input id="gameUrl" type="url" spellcheck="false"
+               value="https://pixelsuft.github.io/hl/xash.html"
+               aria-label="Game URL" />
+        <button class="btn" id="launchInPaneBtn">Launch in Pane</button>
+        <button class="btn" id="openTabBtn">Open in New Tab</button>
+        <button class="btn secondary" id="closeDockBtn" title="ESC">Close</button>
+      </div>
+    </div>
+    <div class="dock-body">
+      <div id="dockHint" class="dock-hint">
+        <div>
+          <div style="font-weight:800; letter-spacing:.22em; text-transform:uppercase; color:var(--amber-soft); filter:var(--glow)">Pixelsuft HL (Web)</div>
+          <p style="max-width:70ch; margin:10px auto 0; color:#cfcfcf">
+            Click <b>Launch in Pane</b> to load the game here. If you see a blank panel,
+            click <b>Open in New Tab</b> — some sites disallow embedding in iframes.
+          </p>
+          <p style="max-width:70ch; margin:6px auto 0; color:#a9a9a9">
+            Note: You may need to supply your own legally‑owned data files for certain builds.
+          </p>
+        </div>
+      </div>
+      <iframe id="gameFrame" class="game-frame" allow="autoplay; fullscreen" title="Game Frame"></iframe>
+    </div>
+  </section>
+
+  <!-- MINI-GAME DOCK (Snake, Pong, Breakout, Flappy, 2048, Roulette) -->
+  <section id="miniDock" class="dock hidden" role="dialog" aria-modal="true" aria-label="Mini Game">
+    <div class="game-toolbar">
+      <div class="title" id="miniTitle">GAME</div>
+      <div style="color:#cfcfcf; letter-spacing:.14em" id="miniHUD"></div>
+      <button class="btn secondary" id="miniCloseBtn" title="ESC">Close</button>
+    </div>
+    <div class="dock-body">
+      <canvas id="gameCanvas" width="640" height="400" aria-label="Game Canvas"></canvas>
+      <div id="rouletteUI" class="hidden" aria-live="polite"></div>
+    </div>
+  </section>
+
+  <!-- WIKIPEDIA DRAWER -->
+  <section id="wikiDrawer" aria-label="HL1 Database Drawer">
+    <div id="wikiTab">HL1 DATABASE</div>
+    <div id="wikiContent">
+      <iframe id="wikiFrame" src="about:blank" title="Half-Life (1998) — Wikipedia"></iframe>
+      <canvas id="wikiOverlay"></canvas>
+    </div>
+  </section>
+
+<script>
+/* ============================================================
+   Audio: Ambient music + UI SFX (procedural, legal)
+============================================================ */
+let audioCtx = null, musicPatch = null, uiPatch = null;
+function ensureAudioCtx(){
+  if(!audioCtx){ audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+  else if (audioCtx.state === 'suspended'){ audioCtx.resume(); }
+  if(!uiPatch) uiPatch = makeUIAudio(audioCtx);
+  return audioCtx;
+}
+function makeMusicPatch(ctx){
+  const master = ctx.createGain(); master.gain.value = .22;
+  const osc = ctx.createOscillator(); osc.type='sawtooth'; osc.frequency.value=62;
+  const lp = ctx.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=420; lp.Q.value=.6;
+  const lfo = ctx.createOscillator(); lfo.type='sine'; lfo.frequency.value=0.08;
+  const lfoGain = ctx.createGain(); lfoGain.gain.value=160;
+  const noiseBuf = (()=>{ const b=ctx.createBuffer(1, ctx.sampleRate*2, ctx.sampleRate); const d=b.getChannelData(0);
+    for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*0.2; return b; })();
+  const noise = ctx.createBufferSource(); noise.buffer=noiseBuf; noise.loop=true;
+  const bp = ctx.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=800; bp.Q.value=1.2;
+  const noiseGain = ctx.createGain(); noiseGain.gain.value=0.18;
+  const delay=ctx.createDelay(2.0); delay.delayTime.value=.33;
+  const feedback=ctx.createGain(); feedback.gain.value=.22;
+  const wet=ctx.createGain(); wet.gain.value=.25;
+  const arpGain = ctx.createGain(); arpGain.gain.value=0.0;
+  const arp = ctx.createOscillator(); arp.type='triangle'; arp.frequency.value=248; arp.start();
+
+  lfo.connect(lfoGain).connect(lp.frequency);
+  osc.connect(lp); lp.connect(master);
+  noise.connect(bp).connect(noiseGain).connect(master);
+
+  const fxSend=ctx.createGain(); fxSend.gain.value=.35; master.connect(fxSend); fxSend.connect(delay);
+  delay.connect(feedback).connect(delay); delay.connect(wet);
+  const out=ctx.createGain(); master.connect(out); wet.connect(out); out.connect(ctx.destination);
+  arp.connect(arpGain).connect(out);
+
+  let arpTimer=null;
+  function scheduleArp(){
+    const now=ctx.currentTime, gap=2.2+Math.random()*1.6;
+    arpGain.gain.cancelScheduledValues(now);
+    arpGain.gain.setValueAtTime(0.0, now);
+    arpGain.gain.linearRampToValueAtTime(0.12, now+0.01);
+    arpGain.gain.exponentialRampToValueAtTime(0.0008, now+0.4);
+    const base=220+Math.random()*60; arp.frequency.setTargetAtTime(base, now, 0.08);
+    arpTimer=setTimeout(scheduleArp, gap*1000);
+  }
+  function start(){ osc.start(); noise.start(); lfo.start(); scheduleArp(); }
+  function stop(){ try{osc.stop()}catch{} try{noise.stop()}catch{} try{lfo.stop()}catch{} if(arpTimer) clearTimeout(arpTimer); }
+  return { master, start, stop };
+}
+function makeUIAudio(ctx){
+  const gain=ctx.createGain(); gain.gain.value=.35; gain.connect(ctx.destination);
+  function tick(){ const o=ctx.createOscillator(); o.type='square'; o.frequency.value=1450;
+    const g=ctx.createGain(); g.gain.setValueAtTime(0.0001, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.25, ctx.currentTime+0.005);
+    g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime+0.06);
+    o.connect(g).connect(gain); o.start(); o.stop(ctx.currentTime+0.07);
+  }
+  function hover(){ const o=ctx.createOscillator(); o.type='triangle'; o.frequency.value=900;
+    const g=ctx.createGain(); g.gain.value=0.12; const t=ctx.currentTime;
+    o.frequency.exponentialRampToValueAtTime(1200, t+0.05);
+    g.gain.exponentialRampToValueAtTime(0.0001, t+0.12);
+    o.connect(g).connect(gain); o.start(); o.stop(t+0.13);
+  }
+  function confirm(){ const o=ctx.createOscillator(); o.type='sine'; o.frequency.value=420;
+    const g=ctx.createGain(); g.gain.value=0.22; const t=ctx.currentTime;
+    o.frequency.exponentialRampToValueAtTime(320, t+0.06);
+    g.gain.exponentialRampToValueAtTime(0.0001, t+0.18);
+    o.connect(g).connect(gain); o.start(); o.stop(t+0.2);
+  }
+  return { tick, hover, confirm, gain };
+}
+
+/* ============================================================
+   UI State & Controls
+============================================================ */
+const menu = document.getElementById('menu');
+const statusLine = document.getElementById('status');
+const musicBtn = document.getElementById('musicBtn');
+const fxBtn = document.getElementById('fxBtn');
+const sfxBtn = document.getElementById('sfxBtn');
+
+let musicOn = false, sfxOn = true, scanOn = true;
+
+window.addEventListener('load', ()=>{
+  document.body.classList.add('boot');
+  requestAnimationFrame(()=> menu.classList.add('ready'));
+  const sp = localStorage.getItem('hl_sfx'); if(sp === 'off'){ sfxOn = false; }
+  const fp = localStorage.getItem('hl_scan'); if(fp === 'off'){ scanOn = false; document.querySelector('.crt').style.display='none'; }
+  updateButtons();
+});
+
+/* Status hints */
+function setStatus(text){ statusLine.textContent = text; }
+menu.addEventListener('mouseover', (e)=>{
+  const li = e.target.closest('li'); if(!li) return;
+  setStatus(li.dataset.hint || ' ');
+  if(sfxOn){ try{ ensureAudioCtx(); uiPatch.hover(); }catch{} }
+});
+menu.addEventListener('focusin', (e)=>{
+  const li = e.target.closest('li'); if(!li) return;
+  setStatus(li.dataset.hint || ' ');
+  if(sfxOn){ try{ ensureAudioCtx(); uiPatch.tick(); }catch{} }
+});
+menu.addEventListener('mouseleave', ()=>{
+  setStatus('Tip: Use ↑/↓ then Enter. Hover items to see the glow.');
+});
+
+/* Buttons */
+function updateButtons(){
+  musicBtn.textContent = `MUSIC: ${musicOn ? 'ON' : 'OFF'}`;
+  musicBtn.setAttribute('aria-pressed', String(musicOn));
+  sfxBtn.textContent = `SFX: ${sfxOn ? 'ON' : 'OFF'}`;
+  sfxBtn.setAttribute('aria-pressed', String(sfxOn));
+  fxBtn.textContent = `SCANLINES: ${scanOn ? 'ON' : 'OFF'}`;
+  fxBtn.setAttribute('aria-pressed', String(scanOn));
+}
+musicBtn.addEventListener('click', ()=>{ if(!musicOn){ enableMusic(); } else { disableMusic(); } });
+sfxBtn.addEventListener('click', ()=>{
+  sfxOn = !sfxOn; if(sfxOn){ ensureAudioCtx(); try{ uiPatch.tick(); }catch{} }
+  localStorage.setItem('hl_sfx', sfxOn ? 'on' : 'off'); updateButtons();
+});
+fxBtn.addEventListener('click', ()=>{
+  scanOn = !scanOn; document.querySelector('.crt').style.display = scanOn ? '' : 'none';
+  localStorage.setItem('hl_scan', scanOn ? 'on' : 'off'); updateButtons();
+});
+
+/* Music controls */
+function enableMusic(){
+  ensureAudioCtx();
+  if(!musicPatch){ musicPatch = makeMusicPatch(audioCtx); musicPatch.master.gain.value=.22; musicPatch.start(); }
+  else if(audioCtx.state === 'suspended'){ audioCtx.resume(); }
+  musicOn = true; localStorage.setItem('hl_music', 'on'); updateButtons();
+}
+function disableMusic(){ if(audioCtx){ audioCtx.suspend(); } musicOn = false; localStorage.setItem('hl_music','off'); updateButtons(); }
+
+/* ============================================================
+   Keyboard Navigation + ESC to close overlays
+============================================================ */
+const items = Array.from(menu.querySelectorAll('li'));
+let idx = 0;
+function focusIndex(i){
+  idx = (i + items.length) % items.length;
+  items[idx].focus({ preventScroll:true });
+  if(sfxOn){ try{ ensureAudioCtx(); uiPatch.tick(); }catch{} }
+}
+document.addEventListener('keydown', (e)=>{
+  const key = e.key;
+  switch(key){
+    case 'ArrowDown': e.preventDefault(); ensureAudioCtx(); focusIndex(idx+1); break;
+    case 'ArrowUp':   e.preventDefault(); ensureAudioCtx(); focusIndex(idx-1); break;
+    case 'Home':      e.preventDefault(); ensureAudioCtx(); focusIndex(0); break;
+    case 'End':       e.preventDefault(); ensureAudioCtx(); focusIndex(items.length-1); break;
+    case 'Enter':
+    case ' ':
+      if(document.activeElement && document.activeElement.closest('#menu')){
+        const action = document.activeElement.dataset.action;
+        routeAction(action);
+      }
+      break;
+    case 'Escape':
+      closeGameDock();
+      closeMiniDock();
+      wikiOpen(false);
+      break;
+  }
+});
+
+/* ============================================================
+   MENU ROUTING
+============================================================ */
+menu.addEventListener('click', (e)=>{
+  const li = e.target.closest('li'); if(!li) return;
+  routeAction(li.dataset.action);
+});
+function routeAction(action){
+  switch(action){
+    case 'pixelsuft': openGameDock(); if(sfxOn){ try{ ensureAudioCtx(); uiPatch.confirm(); }catch{} } break;
+    case 'snake': openMiniDock('Snake'); startSnake(); break;
+    case 'pong': openMiniDock('Pong'); startPong(); break;
+    case 'breakout': openMiniDock('Breakout'); startBreakout(); break;
+    case 'flappy': openMiniDock('Flappy'); startFlappy(); break;
+    case '2048': openMiniDock('2048'); start2048(); break;
+    case 'roulette': openMiniDock('Russian Roulette'); startRoulette(); break;
+    case 'wiki': wikiOpen(true); break;
+    case 'options': setStatus('Options — (placeholder)'); if(sfxOn){ try{ ensureAudioCtx(); uiPatch.confirm(); }catch{} } break;
+    case 'quit': setStatus('Quit — (placeholder)'); if(sfxOn){ try{ ensureAudioCtx(); uiPatch.confirm(); }catch{} } break;
+  }
+}
+
+/* ============================================================
+   EXTERNAL DOCK (Pixelsuft HL)
+============================================================ */
+const gameDock = document.getElementById('gameDock');
+const gameFrame = document.getElementById('gameFrame');
+const dockHint  = document.getElementById('dockHint');
+const gameUrlInput = document.getElementById('gameUrl');
+const launchInPaneBtn = document.getElementById('launchInPaneBtn');
+const openTabBtn = document.getElementById('openTabBtn');
+const closeDockBtn = document.getElementById('closeDockBtn');
+let musicWasOn = false;
+
+function openGameDock(){
+  gameDock.classList.remove('hidden');
+  musicWasOn = musicOn;
+  if(musicOn){ disableMusic(); }
+  const last = localStorage.getItem('hl_launcher_url');
+  if(last) gameUrlInput.value = last;
+  setTimeout(()=> gameUrlInput.focus(), 20);
+}
+function closeGameDock(){
+  if(gameDock.classList.contains('hidden')) return;
+  gameFrame.src = 'about:blank';
+  gameDock.classList.add('hidden');
+  dockHint.classList.remove('hidden');
+  if(musicWasOn){ enableMusic(); }
+  setStatus('Launcher closed.');
+}
+launchInPaneBtn.addEventListener('click', ()=>{
+  const url = (gameUrlInput.value || '').trim();
+  if(!url) return;
+  ensureAudioCtx();
+  localStorage.setItem('hl_launcher_url', url);
+  try{
+    gameFrame.src = url;
+    dockHint.classList.add('hidden');
+    setStatus('Loading game in pane… If blocked, use “Open in New Tab”.');
+  }catch(err){
+    dockHint.classList.remove('hidden');
+    setStatus('Could not embed. Use “Open in New Tab”.');
+  }
+});
+openTabBtn.addEventListener('click', ()=>{
+  const url = (gameUrlInput.value || '').trim();
+  if(!url) return;
+  localStorage.setItem('hl_launcher_url', url);
+  window.open(url, '_blank', 'noopener');
+  setStatus('Opened game in new tab.');
+});
+closeDockBtn.addEventListener('click', closeGameDock);
+gameFrame.addEventListener('load', ()=>{ dockHint.classList.add('hidden'); });
+
+/* ============================================================
+   MINI-GAME DOCK (Snake / Pong / Breakout / Flappy / 2048 / Roulette)
+============================================================ */
+const miniDock = document.getElementById('miniDock');
+const miniTitle = document.getElementById('miniTitle');
+const miniHUD = document.getElementById('miniHUD');
+const miniCloseBtn = document.getElementById('miniCloseBtn');
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d', { alpha:false });
+const rouletteUI = document.getElementById('rouletteUI');
+let gameLoop = null;
+let keyHandler = null;
+let mouseMoveHandler = null;
+let clickHandler = null;
+let touchHandler = null;
+
+function openMiniDock(title){
+  miniTitle.textContent = title.toUpperCase();
+  miniHUD.textContent = '';
+  miniDock.classList.remove('hidden');
+  rouletteUI.classList.add('hidden');
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+}
+function closeMiniDock(){
+  if(miniDock.classList.contains('hidden')) return;
+  clearInterval(gameLoop); gameLoop = null;
+  if(keyHandler){ document.removeEventListener('keydown', keyHandler); keyHandler=null; }
+  if(mouseMoveHandler){ canvas.removeEventListener('mousemove', mouseMoveHandler); mouseMoveHandler=null; }
+  if(clickHandler){ canvas.removeEventListener('mousedown', clickHandler); clickHandler=null; }
+  if(touchHandler){ canvas.removeEventListener('touchstart', touchHandler); touchHandler=null; }
+  miniDock.classList.add('hidden');
+  rouletteUI.classList.add('hidden');
+  setStatus('Game closed.');
+}
+miniCloseBtn.addEventListener('click', closeMiniDock);
+
+/* ---------- Snake ---------- */
+function startSnake(){
+  const grid = 20, cols = canvas.width/grid|0, rows = canvas.height/grid|0;
+  let snake = [[10,10]], dir = [1,0], food = [Math.random()*cols|0, Math.random()*rows|0];
+  function drawCell(x,y,c){ ctx.fillStyle=c; ctx.fillRect(x*grid+1,y*grid+1,grid-2,grid-2); }
+  keyHandler = (e)=>{
+    if(e.key==="ArrowUp"   && dir[1]!== 1) dir=[0,-1];
+    if(e.key==="ArrowDown" && dir[1]!==-1) dir=[0, 1];
+    if(e.key==="ArrowLeft" && dir[0]!== 1) dir=[-1,0];
+    if(e.key==="ArrowRight"&& dir[0]!==-1) dir=[ 1,0];
+  };
+  document.addEventListener('keydown', keyHandler);
+  gameLoop = setInterval(()=>{
+    ctx.fillStyle="#000"; ctx.fillRect(0,0,canvas.width,canvas.height);
+    const head=[(snake[0][0]+dir[0]+cols)%cols,(snake[0][1]+dir[1]+rows)%rows];
+    if(snake.some(s=>s[0]==head[0]&&s[1]==head[1])){ closeMiniDock(); return; }
+    snake.unshift(head);
+    if(head[0]==food[0]&&head[1]==food[1]){ food=[Math.random()*cols|0,Math.random()*rows|0]; }
+    else snake.pop();
+    snake.forEach(s=>drawCell(s[0],s[1],"#ff9b00"));
+    drawCell(food[0],food[1],"#7af57a");
+  },110);
+}
+
+/* ---------- Pong ---------- */
+function startPong(){
+  let py=canvas.height/2-40, by=canvas.height/2, bx=canvas.width/2, vy=2.3, vx=2.6, score=0;
+  gameLoop=setInterval(()=>{
+    ctx.fillStyle="#000"; ctx.fillRect(0,0,canvas.width,canvas.height);
+    py+= (by - (py+40)) * 0.08; // simple AI paddle follows ball
+    bx+=vx; by+=vy;
+    if(by<0||by>canvas.height-10) vy*=-1;
+    if(bx<20 && by>py && by<py+80){ vx*=-1; score++; }
+    if(bx>canvas.width-10) vx*=-1;
+    if(bx<0){ closeMiniDock(); return; }
+    ctx.fillStyle="#ff9b00"; ctx.fillRect(10,py,10,80);
+    ctx.fillRect(bx,by,10,10);
+    ctx.fillStyle="#ffc766"; ctx.fillText("SCORE: "+score, 540, 20);
+  },16);
+}
+
+/* ---------- Breakout ---------- */
+function startBreakout(){
+  const W=canvas.width, H=canvas.height;
+  let paddleX = W/2, paddleW=90, paddleH=10, paddleY=H-30;
+  let bx=W/2, by=H/2, vx=3, vy=-3, rows=5, cols=10, bw=60, bh=18, offsetX=20, offsetY=40, gap=4;
+  let bricks = [];
+  let score=0, best=Number(localStorage.getItem('hs_breakout')||0);
+  miniHUD.textContent = `SCORE: 0  ·  HIGH: ${best}`;
+  for(let r=0;r<rows;r++){ bricks[r]=[]; for(let c=0;c<cols;c++){ bricks[r][c]=1; } }
+
+  keyHandler = (e)=>{
+    if(e.key==='ArrowLeft') paddleX-=20;
+    if(e.key==='ArrowRight') paddleX+=20;
+  }; document.addEventListener('keydown', keyHandler);
+
+  mouseMoveHandler = (e)=>{
+    const rect = canvas.getBoundingClientRect();
+    paddleX = (e.clientX - rect.left);
+  }; canvas.addEventListener('mousemove', mouseMoveHandler);
+
+  function drawBricks(){
+    for(let r=0;r<rows;r++){
+      for(let c=0;c<cols;c++){
+        if(!bricks[r][c]) continue;
+        const x=offsetX + c*(bw+gap), y=offsetY + r*(bh+gap);
+        ctx.fillStyle = "#ffb000"; ctx.fillRect(x,y,bw,bh);
+        ctx.strokeStyle="rgba(0,0,0,.6)"; ctx.strokeRect(x+.5,y+.5,bw-1,bh-1);
+      }
+    }
+  }
+  function collideBricks(){
+    for(let r=0;r<rows;r++){
+      for(let c=0;c<cols;c++){
+        if(!bricks[r][c]) continue;
+        const x=offsetX + c*(bw+gap), y=offsetY + r*(bh+gap);
+        if(bx>x && bx<x+bw && by>y && by<y+bh){
+          bricks[r][c]=0; vy*=-1; score+=10;
+          miniHUD.textContent = `SCORE: ${score}  ·  HIGH: ${best}`;
+          return;
+        }
+      }
+    }
+  }
+
+  gameLoop=setInterval(()=>{
+    ctx.fillStyle="#000"; ctx.fillRect(0,0,W,H);
+
+    // ball update
+    bx+=vx; by+=vy;
+    if(bx<5||bx>W-5) vx*=-1;
+    if(by<5) vy*=-1;
+
+    // paddle clamp
+    paddleX = Math.max(paddleW/2, Math.min(W-paddleW/2, paddleX));
+    // paddle collision
+    if(by>paddleY-5 && by<paddleY+5 && Math.abs(bx-paddleX)<paddleW/2){
+      vy=-Math.abs(vy); // bounce up
+      // add little angle based on where it hit
+      vx = (bx - paddleX) * 0.08 + (vx>0?1:-1)*2.2;
+    }
+
+    // brick collisions
+    collideBricks();
+
+    // draw objects
+    drawBricks();
+    ctx.fillStyle="#ffb000"; ctx.fillRect(paddleX-paddleW/2,paddleY,paddleW,paddleH);
+    ctx.fillStyle="#ffc766"; ctx.beginPath(); ctx.arc(bx,by,5,0,Math.PI*2); ctx.fill();
+
+    // lose
+    if(by>H+10){
+      if(score>best){ localStorage.setItem('hs_breakout', score); }
+      closeMiniDock(); return;
+    }
+    // win
+    if(bricks.every(row=>row.every(v=>!v))){
+      if(score>best){ localStorage.setItem('hs_breakout', score); }
+      closeMiniDock(); return;
+    }
+  },16);
+}
+
+/* ---------- Flappy ---------- */
+function startFlappy(){
+  const W=canvas.width, H=canvas.height;
+  let y = H/2, vy=0, gravity=.35, flap=-6;
+  let pipes=[], frame=0, score=0, best=Number(localStorage.getItem('hs_flappy')||0);
+  miniHUD.textContent = `SCORE: 0  ·  HIGH: ${best}`;
+  function addPipe(){
+    const gap=110, top=40+Math.random()*(H-160);
+    pipes.push({ x:W+20, top:top-gap/2, bot:top+gap/2, w:40, passed:false });
+  }
+  function drawPipes(){
+    ctx.fillStyle="#ffb000";
+    pipes.forEach(p=>{
+      ctx.fillRect(p.x,0,p.w,Math.max(0,p.top));
+      ctx.fillRect(p.x,p.bot,p.w,H-p.bot);
+    });
+  }
+  function collide(){
+    if(y<0 || y>H) return true;
+    for(const p of pipes){
+      if(p.x<60 && p.x+p.w>40){ // bird x range ~ 50
+        if(y<p.top || y>p.bot) return true;
+      }
+    }
+    return false;
+  }
+  function flapAction(){ vy = flap; }
+
+  keyHandler = (e)=>{ if(e.key===' '||e.key==='ArrowUp'){ flapAction(); } };
+  document.addEventListener('keydown', keyHandler);
+  clickHandler = ()=> flapAction();
+  touchHandler = (e)=>{ e.preventDefault(); flapAction(); };
+  canvas.addEventListener('mousedown', clickHandler);
+  canvas.addEventListener('touchstart', touchHandler, { passive:false });
+
+  gameLoop=setInterval(()=>{
+    ctx.fillStyle="#000"; ctx.fillRect(0,0,W,H);
+
+    // physics
+    frame++; if(frame%90===0) addPipe();
+    vy+=gravity; y+=vy;
+    pipes.forEach(p=> p.x-=2.4 );
+    pipes = pipes.filter(p=> p.x>-60 );
+
+    // score
+    pipes.forEach(p=>{
+      if(!p.passed && p.x+ p.w < 40){ p.passed=true; score++; miniHUD.textContent = `SCORE: ${score}  ·  HIGH: ${best}`; }
+    });
+
+    // bird
+    ctx.fillStyle="#7af57a"; ctx.beginPath(); ctx.arc(50,y,10,0,Math.PI*2); ctx.fill();
+
+    // pipes
+    drawPipes();
+
+    if(collide()){
+      if(score>best){ localStorage.setItem('hs_flappy', score); }
+      closeMiniDock(); return;
+    }
+  },16);
+}
+
+/* ---------- 2048 ---------- */
+function start2048(){
+  const N=4, S=90, PAD=10;
+  let grid = Array(N).fill(0).map(()=>Array(N).fill(0));
+  let score=0, best=Number(localStorage.getItem('hs_2048')||0);
+  miniHUD.textContent = `SCORE: 0  ·  HIGH: ${best}`;
+
+  function draw(){
+    ctx.fillStyle="#111"; ctx.fillRect(0,0,canvas.width,canvas.height);
+    for(let r=0;r<N;r++){
+      for(let c=0;c<N;c++){
+        const v=grid[r][c];
+        const x= (canvas.width - (N*S + (N+1)*PAD))/2 + PAD + c*(S+PAD);
+        const y= (canvas.height - (N*S + (N+1)*PAD))/2 + PAD + r*(S+PAD);
+        ctx.fillStyle = v? `hsl(${(Math.log2(v)*30)%360} 70% 45%)` : "#1a1a1a";
+        ctx.fillRect(x,y,S,S);
+        if(v){
+          ctx.fillStyle="#fff4dd"; ctx.font="bold 24px system-ui";
+          ctx.textAlign="center"; ctx.textBaseline="middle";
+          ctx.fillText(v, x+S/2, y+S/2);
+        }
+      }
+    }
+  }
+  function emptyCells(){
+    const res=[]; for(let r=0;r<N;r++)for(let c=0;c<N;c++) if(!grid[r][[i])) moved=true;
+      grid[r]=row;
+    }
+    return moved;
+  }
+  function move(dir){
+    // 0:left, 1:up, 2:right, 3:down
+    for(let i=0;i<dir;i++) rotate();
+    const moved = moveLeft();
+    for(let i=0;i<(4-dir)%4;i++) rotate();
+    if(moved){ addTile(); miniHUD.textContent=`SCORE: ${score}  ·  HIGH: ${best}`; }
+    draw();
+    if(gameOver()){ if(score>best) localStorage.setItem('hs_2048', score); closeMiniDock(); }
+  }
+  function gameOver(){
+    if(emptyCells().length) return false;
+    // check merges
+    for(let r=0;r<N;r++)for(let c=0;c<N;c++){
+      const v=grid[r][c];
+      if((c+1<N && grid[r][c+1]===v) || (r+1<N && grid[r+1][c]===v)) return false;
+    }
+    return true;
+  }
+
+  addTile(); addTile(); draw();
+  keyHandler=(e)=>{
+    if(e.key==='ArrowLeft') move(0);
+    if(e.key==='ArrowUp')   move(1);
+    if(e.key==='ArrowRight')move(2);
+    if(e.key==='ArrowDown') move(3);
+  }; document.addEventListener('keydown', keyHandler);
+}
+
+/* ---------- Russian Roulette (safe/fictional) ---------- */
+function startRoulette(){
+  rouletteUI.innerHTML = `
+    <div class="panel">
+      <h2>CYBER ROULETTE</h2>
+      <p style="margin:.2rem 0;color:#d9d9d9">A harmless, digital chance game. Try your luck—your score rises each safe click.</p>
+      <div style="margin:.6rem 0">
+        <button class="btn" id="spinBtn">SPIN</button>
+        <button class="btn secondary" id="bankBtn">BANK SCORE</button>
+      </div>
+      <div id="rrMsg" style="min-height:1.6rem;color:#ffc766;letter-spacing:.06em"></div>
+      <div style="margin-top:.4rem;color:#cfcfcf">Current: <span id="rrScore">0</span> &nbsp;·&nbsp; High Score: <span id="rrHigh">0</span></div>
+      <div style="height:10px;background:#151515;border:1px solid rgba(255,176,0,.22);margin-top:.6rem">
+        <div id="rrBar" style="height:100%;width:0;background:linear-gradient(90deg,#7af57a,#ffb000,#ff4d4d)"></div>
+      </div>
+    </div>`;
+  rouletteUI.classList.remove('hidden');
+  let score=0, high=Number(localStorage.getItem('rrHigh')||0), risk=0.16; // ~1/6 baseline
+  const scoreEl = document.getElementById('rrScore');
+  const highEl  = document.getElementById('rrHigh');
+  const msgEl   = document.getElementById('rrMsg');
+  const barEl   = document.getElementById('rrBar');
+  highEl.textContent = high;
+  function updateBar(){ barEl.style.width = Math.min(100, (risk*100)).toFixed(0)+'%'; }
+  updateBar();
+  document.getElementById('spinBtn').onclick = ()=>{
+    ensureAudioCtx(); if(sfxOn){ try{ uiPatch.tick(); }catch{} }
+    const boom = Math.random() < risk;
+    if(boom){
+      msgEl.textContent = "SYSTEM FAILURE — run ended.";
+      if(score>high){ localStorage.setItem('rrHigh', score); }
+      setTimeout(()=>{ closeMiniDock(); }, 900);
+    }else{
+      score++; scoreEl.textContent = score;
+      msgEl.textContent = "CLICK… SAFE";
+      risk = Math.min(.75, risk + 0.06);
+      updateBar();
+    }
+  };
+  document.getElementById('bankBtn').onclick = ()=>{
+    ensureAudioCtx(); if(sfxOn){ try{ uiPatch.confirm(); }catch{} }
+    if(score>high){ localStorage.setItem('rrHigh', score); highEl.textContent = score; }
+    msgEl.textContent = "Score banked. Round over."; setTimeout(()=>{ closeMiniDock(); }, 700);
+  };
+}
+
+/* ============================================================
+   WIKIPEDIA DRAWER + Orange Binary Overlay
+============================================================ */
+const wikiDrawer = document.getElementById('wikiDrawer');
+const wikiTab = document.getElementById('wikiTab');
+const wikiFrame = document.getElementById('wikiFrame');
+const wikiOverlay = document.getElementById('wikiOverlay');
+
+function wikiOpen(open){
+  if(open){ 
+    wikiDrawer.classList.add('open');
+    if(wikiFrame.src === 'about:blank'){
+      wikiFrame.src = 'https://en.wikipedia.org/wiki/Half-Life_(1998_video_game)';
+    }
+    resizeWikiOverlay(); startBinary();
+  } else {
+    wikiDrawer.classList.remove('open'); stopBinary();
+  }
+}
+wikiTab.addEventListener('click', ()=> wikiOpen(!wikiDrawer.classList.contains('open')) );
+window.addEventListener('resize', resizeWikiOverlay);
+function resizeWikiOverlay(){
+  wikiOverlay.width = wikiOverlay.clientWidth;
+  wikiOverlay.height= wikiOverlay.clientHeight;
+}
+
+/* Orange binary “matrix” */
+let binTimer = null;
+function startBinary(){
+  const c = wikiOverlay, w=c.width, h=c.height; const g=c.getContext('2d');
+  const cols = Math.floor(w / 12);
+  const rows = Math.floor(h / 16);
+  const glyphs = Array(cols).fill(0).map(()=> Math.random()*rows|0);
+  g.fillStyle = "rgba(0,0,0,0.8)"; g.fillRect(0,0,w,h);
+  function step(){
+    g.fillStyle = 'rgba(0,0,0,0.20)'; g.fillRect(0,0,w,h);
+    g.font = '14px monospace';
+    for(let x=0; x<cols; x++){
+      const y = glyphs[x] = (glyphs[x] + 1 + (Math.random()<0.02?1:0)) % rows;
+      g.fillStyle = 'rgba(255,176,0,0.9)';
+      g.fillText( Math.random()<.5 ? '0' : '1', x*12+2, y*16+14 );
+    }
+  }
+  if(binTimer) clearInterval(binTimer);
+  binTimer = setInterval(step, 60);
+}
+function stopBinary(){ if(binTimer) clearInterval(binTimer); binTimer=null; }
+
+/* ============================================================
+   Final touches: initial focus and music resume logic
+============================================================ */
+window.addEventListener('load', ()=>{ setTimeout(()=>{ if(items[0]) items[0].tabIndex = 0; }, 50); });
+
+</script>
+</body>
+</html>
