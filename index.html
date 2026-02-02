@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Vista Arcade • Mini Game Hub</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<style>
+/* ===== Vista Retro Theme ===== */
+:root{
+  --glass-bg: rgba(255,255,255,0.22);
+  --glass-stroke: rgba(255,255,255,0.35);
+  --bg1: #0b2a4a;
+  --bg2: #1b3f72;
+  --vista-blue-1: #9ad0ff;
+  --vista-blue-2: #2b89ff;
+  --vista-blue-3: #0d67d1;
+  --text: #eef4ff;
+  --muted: #c7d7f2;
+  --panel: #162a4b;
+  --ok: #00e676;
+  --warn: #ffd54f;
+  --danger: #ff616f;
+}
+
+*{ box-sizing: border-box; }
+html,body{
+  margin:0;
+  font-family: "Segoe UI", Tahoma, Verdana, system-ui, -apple-system, sans-serif;
+  color: var(--text);
+  background:
+    radial-gradient(1200px 600px at 10% -10%, rgba(255,255,255,0.12), transparent 60%),
+    linear-gradient(145deg, var(--bg1) 0%, var(--bg2) 100%);
+  min-height:100vh;
+}
+
+/* Subtle Vista glass wallpaper lines */
+body::before{
+  content:"";
+  position:fixed; inset:0;
+  background:
+    repeating-linear-gradient(135deg, rgba(255,255,255,0.06) 0 2px, transparent 2px 10px);
+  pointer-events:none;
+}
+
+/* ===== Top Bar ===== */
+header{
+  position: sticky; top:0; z-index:10;
+  backdrop-filter: blur(10px);
+  background: linear-gradient(180deg, rgba(255,255,255,0.22), rgba(255,255,255,0.06));
+  border-bottom: 1px solid rgba(255,255,255,0.25);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.35) inset, 0 8px 18px rgba(0,0,0,0.25);
+}
+.header-inner{
+  max-width: 1100px; margin:0 auto;
+  display:flex; align-items:center; gap:10px; padding:10px 14px;
+}
+.brand{
+  display:flex; align-items:center; gap:8px; font-weight:600;
+}
+.brand .orb{
+  width:22px; height:22px; border-radius:50%;
+  background: radial-gradient(circle at 30% 30%, #fff, #b2e2ff 35%, #2b89ff 60%, #09306f 100%);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.45), 0 1px 6px rgba(255,255,255,0.4);
+}
+.brand span{ letter-spacing: .2px; }
+
+nav{
+  margin-left:auto; display:flex; gap:8px; flex-wrap:wrap;
+}
+
+.btn{
+  border:none; color:#0a1b32; font-weight:600; cursor:pointer;
+  padding:8px 12px; border-radius:10px;
+  background: linear-gradient(180deg, #e1f2ff, #9ad0ff);
+  box-shadow: 0 1px 0 #fff inset, 0 2px 0 rgba(255,255,255,0.7) inset,
+              0 4px 12px rgba(0,0,0,0.35);
+}
+.btn:hover{ filter: brightness(1.05); }
+.btn:active{ transform: translateY(1px); }
+.btn-ghost{
+  background: linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0.04));
+  color: var(--text);
+  border: 1px solid rgba(255,255,255,0.35);
+}
+
+/* ===== Layout ===== */
+main{ max-width: 1100px; margin: 16px auto 40px; padding: 0 12px; }
+
+section{
+  display:none;
+}
+section.active{ display:block; }
+
+.window{
+  background: linear-gradient(180deg, rgba(255,255,255,0.18), rgba(255,255,255,0.08));
+  border: 1px solid rgba(255,255,255,0.35);
+  border-radius: 14px;
+  box-shadow: 0 18px 45px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.55);
+  overflow: hidden;
+  margin: 10px auto;
+  max-width: 860px;
+}
+.titlebar{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:8px 12px;
+  background: linear-gradient(180deg, #d7ecff, #9ad0ff 60%, #78b8ff 100%);
+  color: #0a2a52;
+  border-bottom: 1px solid rgba(255,255,255,0.6);
+}
+.titlebar .left{ display:flex; align-items:center; gap:8px; }
+.titlebar .title{ font-weight:700; }
+.titlebar .controls{ display:flex; gap:6px; }
+
+.window-body{
+  padding:14px;
+  background:
+    linear-gradient(180deg, rgba(0,0,0,0.12), rgba(0,0,0,0.18)),
+    radial-gradient(900px 400px at 20% -10%, rgba(255,255,255,0.15), transparent 60%),
+    var(--panel);
+}
+
+/* Info panel */
+.info{
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.25);
+  border-radius: 10px; padding: 10px 12px; color: var(--muted);
+  margin-bottom: 12px;
+}
+
+/* Details */
+details{
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.25);
+  border-radius: 10px; padding: 10px 12px; color: var(--muted);
+}
+details summary{ cursor:pointer; color:#eaf2ff; font-weight:600; }
+
+/* Game container */
+.game-box{
+  background: rgba(0,0,0,0.25);
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 12px;
+  padding: 12px;
+  display:grid; gap:10px; justify-items:center;
+}
+
+/* Canvases */
+canvas{
+  background: #000;
+  border-radius: 10px;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.2), 0 10px 25px rgba(0,0,0,0.5);
+  image-rendering: pixelated;
+}
+
+/* Buttons inside games */
+.big-btn{
+  padding: 10px 14px; border-radius: 10px; border: none; cursor:pointer;
+  color:#031c3a; font-weight:700;
+  background: linear-gradient(180deg, #c8f5ff, #7ee6ff);
+  box-shadow: 0 2px 0 rgba(255,255,255,0.8) inset, 0 10px 20px rgba(0,0,0,0.35);
+}
+.big-btn:hover{ filter: brightness(1.06); }
+
+/* Grid for TTT board */
+#ttt-board{
+  display:grid; grid-template-columns: repeat(3, 70px); gap:10px;
+}
+#ttt-board button{
+  height:70px; font-size: 2rem; border:none; border-radius:10px; cursor:pointer;
+  color:#fff; background: linear-gradient(180deg, #4c6cd1, #2a3f84);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.5), 0 6px 16px rgba(0,0,0,0.35);
+}
+
+/* Clicker controls row */
+.row{ display:flex; flex-wrap:wrap; gap:8px; align-items:center; justify-content:center; }
+
+/* High score badge */
+.badge{
+  display:inline-block; padding:4px 8px; border-radius:999px;
+  background: linear-gradient(180deg, #fff0, #fff2);
+  border: 1px solid rgba(255,255,255,0.35);
+  color: var(--muted);
+}
+
+/* Fullscreen scaling */
+.fs-active canvas{
+  width: min(90vw, 90vh) !important; height: auto !important;
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="brand"><div class="orb"></div><span>Vista Arcade</span></div>
+    <nav>
+      <button class="btn" onclick="show('home')">Home</button>
+      <button class="btn" onclick="show('snake')">Snake</button>
+      <button class="btn" onclick="show('pong')">Pong</button>
+      <button class="btn" onclick="show('ttt')">Tic‑Tac‑Toe</button>
+      <button class="btn" onclick="show('clicker')">Clicker</button>
+      <button class="btn" onclick="show('roulette')">Russian Roulette</button>
+      <button id="muteBtn" class="btn-ghost" onclick="toggleMute()">🔊 Sound: On</button>
+    </nav>
+  </div>
+</header>
+
+<main>
+
+  <!-- ===== HOME ===== -->
+  <section id="home" class="active">
+    <div class="window">
+      <div class="titlebar">
+        <div class="left"><span class="title">Welcome to Vista Arcade</span></div>
+        <div class="controls">
+          <button class="btn-ghost" onclick="resetHighScores()">🗑️ Reset High Scores</button>
+        </div>
+      </div>
+      <div class="window-body">
+        <div class="info">
+          <p>Pick a game from the top bar. Your best scores are saved locally on this device (using <code>localStorage</code>).</p>
+        </div>
+
+        <div class="game-box">
+          <h3>🏆 High Scores (Local)</h3>
+          <p class="badge">Snake Best: <span id="hsSnake">0</span></p>
+          <p class="badge">Pong Left Best: <span id="hsPongL">0</span></p>
+          <p class="badge">Pong Right Best: <span id="hsPongR">0</span></p>
+          <p class="badge">Clicker Best: <span id="hsClicker">0</span></p>
+          <p class="badge">TTT Fastest Win (moves): <span id="hsTTTMoves">—</span></p>
+          <p class="badge">TTT Wins — X: <span id="hsTTTX">0</span> | O: <span id="hsTTTO">0</span> | Draws: <span id="hsTTTD">0</span></p>
+          <p class="badge">Roulette Best Streak: <span id="hsRoulette">0</span></p>
+        </div>
+
+        <details style="margin-top:12px;">
+          <summary>About this site</summary>
+          <p>All games run in your browser. No downloads. The visual style is inspired by the Windows Vista “Aero Glass” era — glossy bars, soft glows, and gradients.</p>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== SNAKE ===== -->
+  <section id="snake">
+    <div class="window">
+      <div class="titlebar">
+        <div class="left"><span class="title">🐍 Snake</span></div>
+        <div class="controls">
+          <button class="btn-ghost" onclick="toggleFullscreen('snake')">⛶ Fullscreen</button>
+          <button class="btn-ghost" onclick="snakeReset()">↻ Reset</button>
+        </div>
+      </div>
+      <div class="window-body">
+        <div class="info">
+          <strong>Description:</strong> Grow the snake by eating food. Avoid walls and your own tail.  
+          <strong>Controls:</strong> Arrow Keys (↑ ↓ ← →) to move.
+        </div>
+        <div class="game-box" id="snakeBox">
+          <canvas id="snakeCanvas" width="300" height="300"></canvas>
+          <div class="row">
+            <span>Score: <strong id="snakeScore">0</strong></span>
+            <span class="badge">Best: <span id="snakeBest">0</span></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== PONG ===== -->
+  <section id="pong">
+    <div class="window">
+      <div class="titlebar">
+        <div class="left"><span class="title">🏓 Pong</span></div>
+        <div class="controls">
+          <button class="btn-ghost" onclick="toggleFullscreen('pong')">⛶ Fullscreen</button>
+          <button class="btn-ghost" onclick="pongResetMatch()">↻ Reset Match</button>
+        </div>
+      </div>
+      <div class="window-body">
+        <div class="info">
+          <strong>Description:</strong> Two-player classic. Keep the ball in play and score past your opponent.  
+          <strong>Controls:</strong> Left Paddle = <kbd>W</kbd>/<kbd>S</kbd>, Right Paddle = <kbd>↑</kbd>/<kbd>↓</kbd>.
+        </div>
+        <div class="game-box" id="pongBox">
+          <canvas id="pongCanvas" width="360" height="220"></canvas>
+          <div class="row">
+            <span>Score: <strong id="pongScore">0 : 0</strong></span>
+            <span class="badge">Left Best: <span id="pongBestL">0</span></span>
+            <span class="badge">Right Best: <span id="pongBestR">0</span></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== TIC TAC TOE ===== -->
+  <section id="ttt">
+    <div class="window">
+      <div class="titlebar">
+        <div class="left"><span class="title">❌⭕ Tic‑Tac‑Toe</span></div>
+        <div class="controls">
+          <button class="btn-ghost" onclick="toggleFullscreen('ttt')">⛶ Fullscreen</button>
+          <button class="btn-ghost" onclick="tttReset()">↻ Reset</button>
+        </div>
+      </div>
+      <div class="window-body">
+        <div class="info">
+          <strong>Description:</strong> Two players alternate marking 3×3 grid squares. Three-in-a-row wins.  
+          <strong>Controls:</strong> Mouse/Touch — click a square to mark it.
+        </div>
+        <div class="game-box" id="tttBox">
+          <div id="ttt-board"></div>
+          <div class="row">
+            <span id="ttt-status">X to move</span>
+            <span class="badge">Fastest Win (moves): <span id="tttBestMoves">—</span></span>
+            <span class="badge">X Wins: <span id="tttWinsX">0</span></span>
+            <span class="badge">O Wins: <span id="tttWinsO">0</span></span>
+            <span class="badge">Draws: <span id="tttDraws">0</span></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== CLICKER ===== -->
+  <section id="clicker">
+    <div class="window">
+      <div class="titlebar">
+        <div class="left"><span class="title">🖱️ Clicker</span></div>
+        <div class="controls">
+          <button class="btn-ghost" onclick="toggleFullscreen('clicker')">⛶ Fullscreen</button>
+          <button class="btn-ghost" onclick="clickerReset()">↻ Reset</button>
+          <button class="btn-ghost" onclick="clickerSave()">💾 Save</button>
+          <button class="btn-ghost" onclick="clickerLoad()">📂 Load</button>
+        </div>
+      </div>
+      <div class="window-body">
+        <div class="info">
+          <strong>Description:</strong> Click to gain points and buy power upgrades to click faster.  
+          <strong>Controls:</strong> Mouse/Touch — press the big button to score.
+        </div>
+        <div class="game-box" id="clickerBox">
+          <div class="row">
+            <button class="big-btn" onclick="clickGame()">CLICK</button>
+          </div>
+          <div class="row">
+            <span>Score: <strong id="clickScore">0</strong></span>
+            <span>Power: <strong id="clickPower">1</strong></span>
+            <span class="badge">Best: <span id="clickBest">0</span></span>
+          </div>
+          <div class="row">
+            <button class="btn" onclick="buy(1)">Buy +1 Power (10)</button>
+            <button class="btn" onclick="buy(5)">Buy +5 Power (50)</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== RUSSIAN ROULETTE (safe, game of chance) ===== -->
+  <section id="roulette">
+    <div class="window">
+      <div class="titlebar">
+        <div class="left"><span class="title">🎲 Russian Roulette (Safe Game)</span></div>
+        <div class="controls">
+          <button class="btn-ghost" onclick="toggleFullscreen('roulette')">⛶ Fullscreen</button>
+          <button class="btn-ghost" onclick="rouletteReset()">↻ Reset</button>
+        </div>
+      </div>
+      <div class="window-body">
+        <div class="info">
+          <strong>Description:</strong> A risky luck game simulation. A 6‑chamber “cylinder” contains 1 bullet. Spin or advance the chamber, then pull the trigger. Survive to increase your streak.  
+          <strong>Controls:</strong> Mouse/Touch — use the buttons below.
+          <div style="margin-top:8px;font-size:.92rem;color:#cfe1ff;">This is a harmless simulation for entertainment only.</div>
+        </div>
+        <div class="game-box" id="rouletteBox">
+          <div id="cylinder" style="display:grid;grid-template-columns:repeat(3,42px);gap:8px;justify-content:center;margin:8px 0;"></div>
+          <div class="row">
+            <span>Chamber: <strong id="rollPos">1</strong> / 6</span>
+            <span>Streak: <strong id="rollStreak">0</strong></span>
+            <span class="badge">Best Streak: <span id="rollBest">0</span></span>
+          </div>
+          <div class="row">
+            <button class="big-btn" onclick="rouletteSpin()">🔄 Spin & Arm</button>
+            <button class="big-btn" onclick="rouletteAdvance()">➡️ Advance</button>
+            <button class="big-btn" onclick="roulettePull()">🔫 Pull Trigger</button>
+          </div>
+          <div id="rouletteMsg" style="min-height:22px;color:#e3f3ff;"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<script>
+/* =================== NAV & FULLSCREEN =================== */
+function show(id){
+  document.querySelectorAll("main > section").forEach(s=>s.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+}
+
+function toggleFullscreen(sectionId){
+  const sec = document.getElementById(sectionId);
+  if (!document.fullscreenElement){
+    sec.requestFullscreen?.();
+  } else {
+    document.exitFullscreen?.();
+  }
+}
+document.addEventListener('fullscreenchange', ()=>{
+  // Toggle fs-active class and button label state
+  document.querySelectorAll('main > section').forEach(s=>{
+    if (document.fullscreenElement === s) s.classList.add('fs-active');
+    else s.classList.remove('fs-active');
+  });
+});
+
+/* =================== SOUND (Web Audio) =================== */
+let muted = false;
+let audioCtx;
+function ensureAudio(){
+  if(!audioCtx){
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if(audioCtx.state === 'suspended') audioCtx.resume();
+}
+document.addEventListener('pointerdown', ensureAudio, { once:true });
+
+function beep(freq=440, dur=0.08, type="sine", vol=0.2){
+  if(muted) return;
+  ensureAudio();
+  const t0 = audioCtx.currentTime;
+  const o = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  o.type = type;
+  o.frequency.setValueAtTime(freq, t0);
+  g.gain.setValueAtTime(vol, t0);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+  o.connect(g); g.connect(audioCtx.destination);
+  o.start(t0); o.stop(t0 + dur);
+}
+
+function chord(freqs=[660,880], dur=0.12){
+  if(muted) return;
+  ensureAudio();
+  const t0 = audioCtx.currentTime;
+  const g = audioCtx.createGain();
+  g.gain.value = 0.15;
+  g.connect(audioCtx.destination);
+  freqs.forEach(f=>{
+    const o = audioCtx.createOscillator();
+    o.type='sine';
+    o.frequency.value = f;
+    o.connect(g);
+    o.start(t0);
+    o.stop(t0 + dur);
+  });
+}
+
+function toggleMute(){
+  muted = !muted;
+  document.getElementById('muteBtn').textContent = muted ? "🔇 Sound: Off" : "🔊 Sound: On";
+  if(!muted) beep(880, .06);
+}
+
+/* =================== LOCAL HIGH SCORES =================== */
+const HS_KEY = 'vistaArcadeScores_v1';
+let HS = {
+  snakeBest: 0,
+  pongLeftBest: 0,
+  pongRightBest: 0,
+  clickerBest: 0,
+  tttBestMoves: null, // fewer is better
+  tttWins: { X:0, O:0, D:0 },
+  rouletteBest: 0
+};
+function loadHighScores(){
+  const raw = localStorage.getItem(HS_KEY);
+  if(raw){
+    try{
+      const o = JSON.parse(raw);
+      HS = Object.assign(HS, o, { tttWins: Object.assign({X:0,O:0,D:0}, o.tttWins||{}) });
+    }catch{}
+  }
+  updateHomeHS();
+}
+function saveHighScores(){
+  localStorage.setItem(HS_KEY, JSON.stringify(HS));
+  updateHomeHS();
+}
+function updateHomeHS(){
+  // Home page
+  document.getElementById('hsSnake').textContent = HS.snakeBest;
+  document.getElementById('hsPongL').textContent = HS.pongLeftBest;
+  document.getElementById('hsPongR').textContent = HS.pongRightBest;
+  document.getElementById('hsClicker').textContent = HS.clickerBest;
+  document.getElementById('hsTTTMoves').textContent = HS.tttBestMoves ?? '—';
+  document.getElementById('hsTTTX').textContent = HS.tttWins.X;
+  document.getElementById('hsTTTO').textContent = HS.tttWins.O;
+  document.getElementById('hsTTTD').textContent = HS.tttWins.D;
+  document.getElementById('hsRoulette').textContent = HS.rouletteBest;
+
+  // Per game badges (if present)
+  const e = (id,v)=>{ const el=document.getElementById(id); if(el) el.textContent=v; };
+  e('snakeBest', HS.snakeBest);
+  e('pongBestL', HS.pongLeftBest);
+  e('pongBestR', HS.pongRightBest);
+  e('clickBest', HS.clickerBest);
+  e('tttBestMoves', HS.tttBestMoves ?? '—');
+  e('tttWinsX', HS.tttWins.X);
+  e('tttWinsO', HS.tttWins.O);
+  e('tttDraws', HS.tttWins.D);
+  e('rollBest', HS.rouletteBest);
+}
+function resetHighScores(){
+  if(!confirm('Reset all local high scores and stats?')) return;
+  HS = {
+    snakeBest: 0,
+    pongLeftBest: 0,
+    pongRightBest: 0,
+    clickerBest: 0,
+    tttBestMoves: null,
+    tttWins: { X:0, O:0, D:0 },
+    rouletteBest: 0
+  };
+  saveHighScores();
+  beep(420, .09); beep(320, .09);
+}
+
+/* =================== SNAKE =================== */
+const sc = document.getElementById("snakeCanvas");
+const sctx = sc.getContext("2d");
+const cell = 15;
+let snake = [], food = {}, sdx = cell, sdy = 0, sScore = 0;
+
+function snakeReset(){
+  snake = [{x:150,y:150}];
+  food = { x: Math.floor(Math.random()*20)*cell, y: Math.floor(Math.random()*20)*cell };
+  sdx = cell; sdy = 0; sScore = 0;
+  document.getElementById('snakeScore').textContent = sScore;
+  document.getElementById('snakeBest').textContent = HS.snakeBest;
+}
+document.addEventListener("keydown", e=>{
+  if(e.key==="ArrowUp" && sdy===0){ sdx=0; sdy=-cell; }
+  if(e.key==="ArrowDown" && sdy===0){ sdx=0; sdy= cell; }
+  if(e.key==="ArrowLeft" && sdx===0){ sdx=-cell; sdy=0; }
+  if(e.key==="ArrowRight" && sdx===0){ sdx= cell; sdy=0; }
+});
+
+setInterval(()=>{
+  if(!document.getElementById('snake').classList.contains('active')) return;
+  const head = { x: snake[0].x + sdx, y: snake[0].y + sdy };
+  // collision
+  const hitWall = head.x<0||head.y<0||head.x>=sc.width||head.y>=sc.height;
+  const hitSelf = snake.some(s=>s.x===head.x && s.y===head.y);
+  if(hitWall || hitSelf){
+    beep(160,.12,'square',0.2);
+    snakeReset();
+    return;
+  }
+  snake.unshift(head);
+  if(head.x===food.x && head.y===food.y){
+    sScore++;
+    if(sScore>HS.snakeBest){ HS.snakeBest=sScore; saveHighScores(); }
+    document.getElementById('snakeScore').textContent = sScore;
+    document.getElementById('snakeBest').textContent = HS.snakeBest;
+    chord([660,990], .09);
+    food = { x: Math.floor(Math.random()*20)*cell, y: Math.floor(Math.random()*20)*cell };
+  }else{
+    snake.pop();
+  }
+
+  // draw
+  sctx.clearRect(0,0,sc.width,sc.height);
+  sctx.fillStyle = "#39ff14";
+  snake.forEach(s=>sctx.fillRect(s.x,s.y,cell,cell));
+  sctx.fillStyle = "#ff5252";
+  sctx.fillRect(food.x,food.y,cell,cell);
+}, 140);
+
+/* =================== PONG =================== */
+const pc = document.getElementById("pongCanvas");
+const pctx = pc.getContext("2d");
+let lp=90, rp=90, bx=pc.width/2, by=pc.height/2, bvx=2.2, bvy=2.2, ls=0, rs=0;
+
+document.addEventListener("keydown", e=>{
+  if(e.key==="w") lp -= 12;
+  if(e.key==="s") lp += 12;
+  if(e.key==="ArrowUp") rp -= 12;
+  if(e.key==="ArrowDown") rp += 12;
+  lp = Math.max(0, Math.min(pc.height-50, lp));
+  rp = Math.max(0, Math.min(pc.height-50, rp));
+});
+
+function pongResetBall(dir= (Math.random()<0.5?-1:1)){
+  bx = pc.width/2; by = pc.height/2;
+  bvx = 2.2*dir; bvy = (Math.random()<0.5?2.2:-2.2);
+}
+function pongResetMatch(){
+  if(ls>HS.pongLeftBest){ HS.pongLeftBest=ls; saveHighScores(); }
+  if(rs>HS.pongRightBest){ HS.pongRightBest=rs; saveHighScores(); }
+  ls=0; rs=0; pongResetBall();
+  beep(400,.08); beep(300,.08);
+}
+
+setInterval(()=>{
+  if(!document.getElementById('pong').classList.contains('active')) return;
+
+  bx += bvx; by += bvy;
+
+  // top/bottom
+  if(by<0 || by>pc.height){ bvy*=-1; beep(320,.05); }
+
+  // paddles
+  if(bx<12 && by>lp && by<lp+50){ bvx*=-1.06; beep(660,.06); }
+  if(bx>pc.width-12 && by>rp && by<rp+50){ bvx*=-1.06; beep(660,.06); }
+
+  // score
+  if(bx<0){ rs++; if(rs>HS.pongRightBest){ HS.pongRightBest=rs; saveHighScores(); } beep(200,.09); pongResetBall(1); }
+  if(bx>pc.width){ ls++; if(ls>HS.pongLeftBest){ HS.pongLeftBest=ls; saveHighScores(); } beep(200,.09); pongResetBall(-1); }
+
+  // draw
+  pctx.clearRect(0,0,pc.width,pc.height);
+  pctx.fillStyle="#fff";
+  pctx.fillRect(6,lp,6,50);
+  pctx.fillRect(pc.width-12,rp,6,50);
+  pctx.beginPath(); pctx.arc(bx,by,4,0,Math.PI*2); pctx.fill();
+  pctx.globalAlpha=0.15; pctx.fillRect(pc.width/2-1,0,2,pc.height); pctx.globalAlpha=1;
+
+  document.getElementById('pongScore').textContent = `${ls} : ${rs}`;
+  document.getElementById('pongBestL').textContent = HS.pongLeftBest;
+  document.getElementById('pongBestR').textContent = HS.pongRightBest;
+}, 16);
+
+/* =================== TIC TAC TOE =================== */
+let tBoard = Array(9).fill(""), tPlayer="X", tOver=false, tMoves=0;
+const tb = document.getElementById("ttt-board");
+function tttReset(){
+  tBoard = Array(9).fill(""); tPlayer="X"; tOver=false; tMoves=0;
+  document.getElementById("ttt-status").textContent="X to move";
+  drawTTT();
+}
+function drawTTT(){
+  tb.innerHTML="";
+  tBoard.forEach((v,i)=>{
+    const b = document.createElement("button");
+    b.textContent = v;
+    b.disabled = !!v || tOver;
+    b.onclick = ()=>moveTTT(i);
+    tb.appendChild(b);
+  });
+}
+function moveTTT(i){
+  if(tOver || tBoard[i]) return;
+  tBoard[i]=tPlayer; tMoves++; beep(540,.05);
+  if(winTTT(tPlayer)){
+    document.getElementById("ttt-status").textContent = `${tPlayer} wins!`;
+    tOver=true; chord([880,1100],.12);
+    if(!HS.tttBestMoves || tMoves < HS.tttBestMoves){ HS.tttBestMoves = tMoves; }
+    HS.tttWins[tPlayer]++; saveHighScores(); updateHomeHS();
+  } else if (tBoard.every(Boolean)){
+    document.getElementById("ttt-status").textContent = `Draw`;
+    tOver=true; beep(260,.1);
+    HS.tttWins.D++; saveHighScores(); updateHomeHS();
+  } else {
+    tPlayer = (tPlayer==="X")?"O":"X";
+    document.getElementById("ttt-status").textContent = `${tPlayer} to move`;
+  }
+  drawTTT();
+}
+function winTTT(p){
+  return [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]].some(line=>line.every(i=>tBoard[i]===p));
+}
+tttReset();
+
+/* =================== CLICKER =================== */
+let cScore=0, cPower=1;
+function updateClickerUI(){
+  document.getElementById('clickScore').textContent=cScore;
+  document.getElementById('clickPower').textContent=cPower;
+  if(cScore>HS.clickerBest){ HS.clickerBest=cScore; saveHighScores(); }
+  document.getElementById('clickBest').textContent = HS.clickerBest;
+}
+function clickGame(){ cScore+=cPower; beep(720,.05); updateClickerUI(); }
+function buy(n){
+  const cost = n===1?10:50;
+  if(cScore>=cost){ cScore-=cost; cPower+=n; chord([640,820],.08); updateClickerUI(); }
+}
+function clickerReset(){ cScore=0; cPower=1; updateClickerUI(); beep(300,.06); }
+function clickerSave(){ localStorage.setItem('vistaArcadeClicker', JSON.stringify({cScore,cPower})); chord([700,900],.1); }
+function clickerLoad(){
+  const raw = localStorage.getItem('vistaArcadeClicker');
+  if(raw){ try{ const o=JSON.parse(raw); cScore=o.cScore|0; cPower=o.cPower|0; }catch{} }
+  updateClickerUI(); beep(500,.06);
+}
+
+/* =================== RUSSIAN ROULETTE (safe sim) =================== */
+const cylEl = document.getElementById('cylinder');
+let rollPos=0, bulletPos=0, rollStreak=0;
+
+function drawCylinder(){
+  cylEl.innerHTML="";
+  const layout=[0,1,2,3,4,5];
+  layout.forEach((idx)=>{
+    const d=document.createElement('div');
+    d.style.width='42px'; d.style.height='42px';
+    d.style.borderRadius='50%';
+    const armed = (idx===rollPos);
+    d.style.background = armed
+      ? 'radial-gradient(circle at 30% 30%, #fff, #8ef 35%, #2b89ff 65%, #09306f 100%)'
+      : 'radial-gradient(circle at 30% 30%, #fff, #eef 35%, #bcd 65%, #567 100%)';
+    d.style.boxShadow='inset 0 0 0 2px rgba(255,255,255,0.5), 0 6px 16px rgba(0,0,0,0.35)';
+    d.style.display='grid'; d.style.placeItems='center'; d.style.color='#012';
+    d.style.fontWeight='700';
+    d.textContent = idx+1;
+    cylEl.appendChild(d);
+    if(idx===2) cylEl.appendChild(document.createElement('div')); // spacer to make 3x3
+  });
+  document.getElementById('rollPos').textContent = rollPos+1;
+  document.getElementById('rollStreak').textContent = rollStreak;
+  document.getElementById('rollBest').textContent = HS.rouletteBest;
+}
+function rouletteReset(){
+  rollPos = Math.floor(Math.random()*6);
+  bulletPos = Math.floor(Math.random()*6);
+  rollStreak = 0;
+  document.getElementById('rouletteMsg').textContent='';
+  drawCylinder();
+}
+function rouletteSpin(){
+  bulletPos = Math.floor(Math.random()*6);
+  rollPos = Math.floor(Math.random()*6);
+  document.getElementById('rouletteMsg').textContent='You spun the cylinder.';
+  chord([700,900],.09);
+  drawCylinder();
+}
+function rouletteAdvance(){
+  rollPos = (rollPos+1)%6;
+  document.getElementById('rouletteMsg').textContent='Advanced chamber.';
+  beep(520,.06);
+  drawCylinder();
+}
+function roulettePull(){
+  if(rollPos===bulletPos){
+    document.getElementById('rouletteMsg').textContent='💥 Bang! You lost this round.';
+    // falling pitch effect
+    beep(440,.06,'square',0.22); setTimeout(()=>beep(320,.08,'square',0.22),70);
+    rollStreak = 0; // reset streak on loss
+    // re-arm a new round
+    bulletPos = Math.floor(Math.random()*6);
+  }else{
+    document.getElementById('rouletteMsg').textContent='🟢 Click. You survived!';
+    rollStreak++;
+    if(rollStreak>HS.rouletteBest){ HS.rouletteBest=rollStreak; saveHighScores(); }
+    chord([720,1000],.09);
+  }
+  drawCylinder();
+}
+rouletteReset();
+
+/* =================== INIT =================== */
+loadHighScores();
+snakeReset();
+pongResetBall();
+updateClickerUI();
+drawCylinder();
+
+</script>
+</body>
+</html>
