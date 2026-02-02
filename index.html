@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 
 <style>
-/* ===== Vista Aero Look ===== */
+/* ===== Vista Aero Look (compact) ===== */
 :root{
   --bg1:#0b2a4a; --bg2:#1b3f72; --text:#eef4ff; --muted:#c7d7f2; --panel:#162a4b;
 }
@@ -59,29 +59,15 @@ section{display:none} section.active{display:block}
   box-shadow:0 2px 0 rgba(255,255,255,.8) inset, 0 10px 20px rgba(0,0,0,.35);}
 .big-btn:hover{filter:brightness(1.06)}
 
-/* Canvases */
-canvas{background:#000;border-radius:10px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.2), 0 10px 25px rgba(0,0,0,.5);
+/* Canvases / Iframes */
+canvas, iframe{background:#000;border-radius:10px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.2), 0 10px 25px rgba(0,0,0,.5);
   image-rendering:pixelated}
-.fs-active canvas{width:min(90vw,90vh)!important;height:auto!important}
+.fs-active canvas, .fs-active iframe{width:min(90vw,90vh)!important;height:auto!important}
 
 /* TTT board */
 #ttt-board{display:grid;grid-template-columns:repeat(3,70px);gap:10px}
 #ttt-board button{height:70px;font-size:2rem;border:none;border-radius:10px;cursor:pointer;color:#fff;
   background:linear-gradient(180deg,#4c6cd1,#2a3f84);box-shadow:inset 0 1px 0 rgba(255,255,255,.5), 0 6px 16px rgba(0,0,0,.35)}
-
-/* Shooter HUD */
-.hud{position:relative;width:100%}
-.hud .bar{position:absolute;left:8px;bottom:8px;display:flex;gap:8px;align-items:center;background:rgba(0,0,0,.35);
-  padding:6px 8px;border-radius:8px;border:1px solid rgba(255,255,255,.2);color:#e8f3ff;pointer-events:none}
-.minimap{position:absolute;right:8px;top:8px;width:110px;height:110px;background:rgba(0,0,0,.35);
-  border:1px solid rgba(255,255,255,.3);border-radius:8px;overflow:hidden}
-.flash{position:absolute;left:50%;transform:translateX(-50%);bottom:12px;width:90px;height:46px;border-radius:8px;
-  background:radial-gradient(circle at 30% 30%,#fff,#ffd98a 60%, rgba(255,180,50,.4));opacity:0;pointer-events:none;
-  transition:opacity .06s linear}
-#doomGun{position:absolute;left:50%;transform:translateX(-50%) translateY(0);bottom:0;width:170px;height:auto;pointer-events:none;opacity:.98;transition:transform .06s ease-out}
-.crosshair{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:18px;height:18px;pointer-events:none;opacity:.8;
-  border-left:2px solid rgba(255,255,255,.75);border-top:2px solid rgba(255,255,255,.75);
-  border-right:2px solid rgba(255,255,255,.75);border-bottom:2px solid rgba(255,255,255,.75);border-radius:4px}
 </style>
 </head>
 <body>
@@ -94,9 +80,8 @@ canvas{background:#000;border-radius:10px;box-shadow:inset 0 0 0 1px rgba(255,25
     <button class="btn" onclick="navClick(); show('pong')">Pong</button>
     <button class="btn" onclick="navClick(); show('ttt')">Tic‑Tac‑Toe</button>
     <button class="btn" onclick="navClick(); show('clicker')">Clicker</button>
-    <button class="btn" onclick="navClick(); show('roulette')">Russian Roulette</button>
-    <button class="btn" onclick="navClick(); show('doom')">3D Shooter</button>
-    <button id="muteBtn" class="btn-ghost" onclick="toggleMute()">🔊 Sound: On</button>
+    <button class="btn" onclick="navClick(); show('roulette')">Roulette</button>
+    <button class="btn" onclick="navClick(); show('halflife')">Half‑Life 1</button>
   </nav>
 </header>
 
@@ -105,28 +90,14 @@ canvas{background:#000;border-radius:10px;box-shadow:inset 0 0 0 1px rgba(255,25
   <!-- ===== HOME ===== -->
   <section id="home" class="active">
     <div class="window">
-      <div class="titlebar">
-        <div class="left"><span class="title">Welcome to Vista Arcade</span></div>
-        <div class="controls">
-          <button class="btn-ghost" onclick="resetHighScores()">🗑️ Reset High Scores</button>
-        </div>
-      </div>
+      <div class="titlebar"><div class="left"><span class="title">Welcome</span></div></div>
       <div class="window-body">
         <div class="info">
-          Pick a game from the top bar. Your best scores are saved locally (using <code>localStorage</code>).
+          Pick a game from the top bar.  
+          <b>Half‑Life 1</b> runs in a built‑in launcher (no downloads). Use **Launch** for Pixelsuft, or **Launch Demo** to open the WebXash page with **Uplink/Day One** demo options.
         </div>
-
         <div class="game-box">
-          <h3>🏆 High Scores (Local)</h3>
-          <p class="badge">Snake Best: <span id="hsSnake">0</span></p>
-          <p class="badge">Pong Left Best: <span id="hsPongL">0</span></p>
-          <p class="badge">Pong Right Best: <span id="hsPongR">0</span></p>
-          <p class="badge">Clicker Best: <span id="hsClicker">0</span></p>
-          <p class="badge">TTT Fastest Win (moves): <span id="hsTTTMoves">—</span></p>
-          <p class="badge">TTT Wins — X: <span id="hsTTTX">0</span> | O: <span id="hsTTTO">0</span> | Draws: <span id="hsTTTD">0</span></p>
-          <p class="badge">Roulette Best Streak: <span id="hsRoulette">0</span></p>
-          <p class="badge">3D Shooter Best Time: <span id="hsDoomTime">0.0</span>s</p>
-          <p class="badge">3D Shooter Max Level: <span id="hsDoomLevel">1</span></p>
+          <p class="badge">Tip: Use the ⛶ Fullscreen button in each section.</p>
         </div>
       </div>
     </div>
@@ -143,13 +114,10 @@ canvas{background:#000;border-radius:10px;box-shadow:inset 0 0 0 1px rgba(255,25
         </div>
       </div>
       <div class="window-body">
-        <div class="info"><strong>Description:</strong> Grow the snake by eating food. Avoid walls and your own tail. <strong>Controls:</strong> Arrow keys.</div>
+        <div class="info"><strong>Controls:</strong> Arrow keys. Eat food, avoid walls and your tail.</div>
         <div class="game-box">
           <canvas id="snakeCanvas" width="300" height="300"></canvas>
-          <div class="row">
-            <span>Score: <strong id="snakeScore">0</strong></span>
-            <span class="badge">Best: <span id="snakeBest">0</span></span>
-          </div>
+          <div class="row"><span>Score: <strong id="snakeScore">0</strong></span></div>
         </div>
       </div>
     </div>
@@ -162,18 +130,14 @@ canvas{background:#000;border-radius:10px;box-shadow:inset 0 0 0 1px rgba(255,25
         <div class="left"><span class="title">🏓 Pong</span></div>
         <div class="controls">
           <button class="btn-ghost" onclick="toggleFullscreen('pong')">⛶ Fullscreen</button>
-          <button class="btn-ghost" onclick="pongResetMatch()">↻ Reset Match</button>
+          <button class="btn-ghost" onclick="pongResetMatch()">↻ Reset</button>
         </div>
       </div>
       <div class="window-body">
-        <div class="info"><strong>Description:</strong> Two‑player classic. <strong>Controls:</strong> Left: W/S, Right: ↑/↓.</div>
+        <div class="info"><strong>Controls:</strong> Left: W/S • Right: ↑/↓.</div>
         <div class="game-box">
           <canvas id="pongCanvas" width="360" height="220"></canvas>
-          <div class="row">
-            <span>Score: <strong id="pongScore">0 : 0</strong></span>
-            <span class="badge">Left Best: <span id="pongBestL">0</span></span>
-            <span class="badge">Right Best: <span id="pongBestR">0</span></span>
-          </div>
+          <div class="row"><span>Score: <strong id="pongScore">0 : 0</strong></span></div>
         </div>
       </div>
     </div>
@@ -190,16 +154,10 @@ canvas{background:#000;border-radius:10px;box-shadow:inset 0 0 0 1px rgba(255,25
         </div>
       </div>
       <div class="window-body">
-        <div class="info"><strong>Description:</strong> Two players alternate. <strong>Controls:</strong> Click squares.</div>
+        <div class="info"><strong>Controls:</strong> Click squares. Three in a row wins.</div>
         <div class="game-box">
           <div id="ttt-board"></div>
-          <div class="row">
-            <span id="ttt-status">X to move</span>
-            <span class="badge">Fastest Win (moves): <span id="tttBestMoves">—</span></span>
-            <span class="badge">X Wins: <span id="tttWinsX">0</span></span>
-            <span class="badge">O Wins: <span id="tttWinsO">0</span></span>
-            <span class="badge">Draws: <span id="tttDraws">0</span></span>
-          </div>
+          <div class="row"><span id="ttt-status">X to move</span></div>
         </div>
       </div>
     </div>
@@ -213,22 +171,21 @@ canvas{background:#000;border-radius:10px;box-shadow:inset 0 0 0 1px rgba(255,25
         <div class="controls">
           <button class="btn-ghost" onclick="toggleFullscreen('clicker')">⛶ Fullscreen</button>
           <button class="btn-ghost" onclick="clickerReset()">↻ Reset</button>
-          <button class="btn-ghost" onclick="clickerSave()">💾 Save</button>
-          <button class="btn-ghost" onclick="clickerLoad()">📂 Load</button>
         </div>
       </div>
       <div class="window-body">
-        <div class="info"><strong>Description:</strong> Click to gain points and buy upgrades. <strong>Controls:</strong> Click/Tap the big button.</div>
+        <div class="info"><strong>Controls:</strong> Click to score. Buy power to gain more per click.</div>
         <div class="game-box">
-          <div class="row"><button class="big-btn" onclick="clickGame()">CLICK</button></div>
+          <div class="row">
+            <button class="big-btn" onclick="clickGame()">CLICK</button>
+          </div>
           <div class="row">
             <span>Score: <strong id="clickScore">0</strong></span>
             <span>Power: <strong id="clickPower">1</strong></span>
-            <span class="badge">Best: <span id="clickBest">0</span></span>
           </div>
           <div class="row">
-            <button class="btn" onclick="buy(1)">Buy +1 Power (10)</button>
-            <button class="btn" onclick="buy(5)">Buy +5 Power (50)</button>
+            <button class="btn" onclick="buy(1)">+1 Power (10)</button>
+            <button class="btn" onclick="buy(5)">+5 Power (50)</button>
           </div>
         </div>
       </div>
@@ -239,25 +196,24 @@ canvas{background:#000;border-radius:10px;box-shadow:inset 0 0 0 1px rgba(255,25
   <section id="roulette">
     <div class="window">
       <div class="titlebar">
-        <div class="left"><span class="title">🎲 Russian Roulette (Safe)</span></div>
+        <div class="left"><span class="title">🎲 Roulette (Safe Sim)</span></div>
         <div class="controls">
           <button class="btn-ghost" onclick="toggleFullscreen('roulette')">⛶ Fullscreen</button>
           <button class="btn-ghost" onclick="rouletteReset()">↻ Reset</button>
         </div>
       </div>
       <div class="window-body">
-        <div class="info"><strong>Description:</strong> Spin, advance, and pull the trigger to build your streak. <strong>Controls:</strong> Use the buttons below.</div>
+        <div class="info">Spin, advance, and pull. Try to build a streak. Pure simulation.</div>
         <div class="game-box">
           <div id="cylinder" style="display:grid;grid-template-columns:repeat(3,42px);gap:8px;justify-content:center;margin:8px 0;"></div>
           <div class="row">
             <span>Chamber: <strong id="rollPos">1</strong> / 6</span>
             <span>Streak: <strong id="rollStreak">0</strong></span>
-            <span class="badge">Best Streak: <span id="rollBest">0</span></span>
           </div>
           <div class="row">
             <button class="big-btn" onclick="rouletteSpin()">🔄 Spin & Arm</button>
             <button class="big-btn" onclick="rouletteAdvance()">➡️ Advance</button>
-            <button class="big-btn" onclick="roulettePull()">🔫 Pull Trigger</button>
+            <button class="big-btn" onclick="roulettePull()">🔫 Pull</button>
           </div>
           <div id="rouletteMsg" style="min-height:22px;color:#e3f3ff;"></div>
         </div>
@@ -265,39 +221,31 @@ canvas{background:#000;border-radius:10px;box-shadow:inset 0 0 0 1px rgba(255,25
     </div>
   </section>
 
-  <!-- ===== 3D SHOOTER ===== -->
-  <section id="doom">
+  <!-- ===== HALF‑LIFE 1 (Pixelsuft + WebXash demo) ===== -->
+  <section id="halflife">
     <div class="window">
       <div class="titlebar">
-        <div class="left"><span class="title">🔫 Retro 3D Shooter</span></div>
+        <div class="left"><span class="title">🔬 Half‑Life 1 (Browser)</span></div>
         <div class="controls">
-          <button class="btn-ghost" onclick="toggleFullscreen('doom')">⛶ Fullscreen</button>
-          <button class="btn-ghost" onclick="doomReset(true)">↻ Restart</button>
+          <button class="btn-ghost" onclick="toggleFullscreen('halflife')">⛶ Fullscreen</button>
+          <button class="btn-ghost" onclick="openHL()">▶ Launch</button>
+          <button class="btn-ghost" onclick="openHLDemo()">▶ Launch Demo</button>
         </div>
       </div>
       <div class="window-body">
         <div class="info">
-          <strong>Description:</strong> Ray‑cast shooter with animated weapon, multiple enemies & death animations, pickups (health/ammo/armor/key), doors (locked), switches, mini‑map, and <strong>random playable levels</strong>. Reach the exit to advance and beat your time.  
-          <strong>Controls:</strong> W/S move, A/D strafe, Mouse look, Click shoot, <kbd>E</kbd> use, <kbd>R</kbd> reload, <kbd>Esc</kbd> unlock pointer.  
-          <strong>Gamepad:</strong> Left stick move/strafe • Right stick look • A=Fire • X=Use.
+          Runs Half‑Life in your browser (WebAssembly).  
+          <strong>Launch:</strong> Pixelsuft HL (bring your own files).  
+          <strong>Launch Demo:</strong> WebXash page with **Uplink** and **Day One** demo options in‑page.
         </div>
-        <div class="game-box" id="doomBox" style="position:relative;overflow:hidden;">
-          <canvas id="doomCanvas" width="420" height="260"></canvas>
-          <div class="hud" style="height:0;">
-            <div class="bar">
-              <span class="chip">HP: <strong id="doomHP">100</strong></span>
-              <span class="chip">Armor: <strong id="doomAR">0</strong></span>
-              <span class="chip">Ammo: <strong id="doomAmmo">20</strong></span>
-              <span class="chip">Key: <strong id="doomKey">No</strong></span>
-              <span class="chip">Level: <strong id="doomLevel">1</strong></span>
-              <span class="chip">Time: <strong id="doomTime">0.0</strong>s</span>
-              <span class="chip">Best: <strong id="doomBest">0.0</strong>s</span>
-            </div>
-            <div class="minimap"><canvas id="doomMini" width="110" height="110"></canvas></div>
-            <div id="doomFlash" class="flash"></div>
-            <img id="doomGun" alt="gun">
-            <div class="crosshair"></div>
-          </div>
+        <div class="game-box" style="height:520px">
+          <iframe
+            id="hlFrame"
+            title="Half-Life Browser (Xash / WebXash)"
+            style="width:100%;height:100%;border:0;border-radius:10px;background:black"
+            allow="fullscreen; gamepad; keyboard; cross-origin-isolated"
+            referrerpolicy="no-referrer"
+          ></iframe>
         </div>
       </div>
     </div>
@@ -310,99 +258,46 @@ canvas{background:#000;border-radius:10px;box-shadow:inset 0 0 0 1px rgba(255,25
 function show(id){
   document.querySelectorAll("main > section").forEach(s=>s.classList.remove("active"));
   document.getElementById(id).classList.add("active");
-  if(id==='doom') startDoomMusic(); else stopDoomMusic();
 }
-function navClick(){ Sound.ui?.(); }
+function navClick(){ /* soft ui click */ }
 function toggleFullscreen(sectionId){
   const sec=document.getElementById(sectionId);
-  if(!document.fullscreenElement){sec.requestFullscreen?.();}else{document.exitFullscreen?.();}
+  if(!document.fullscreenElement){ sec.requestFullscreen?.(); }
+  else { document.exitFullscreen?.(); }
 }
-document.addEventListener('fullscreenchange',()=>{
+document.addEventListener('fullscreenchange', ()=>{
   document.querySelectorAll('main > section').forEach(s=>{
     if(document.fullscreenElement===s) s.classList.add('fs-active'); else s.classList.remove('fs-active');
   });
 });
 
-/* =================== AUDIO CORE + SOUND ENGINE =================== */
-let audioCtx; let audioMuted=false;
-function ensureAudio(){ if(!audioCtx){ audioCtx=new (window.AudioContext||window.webkitAudioContext)(); } if(audioCtx.state==='suspended') audioCtx.resume(); }
-document.addEventListener('pointerdown',ensureAudio,{once:true});
-
-function beep(freq=440,dur=0.08,type="sine",vol=0.2){ if(audioMuted) return; ensureAudio();
-  const t0=audioCtx.currentTime, o=audioCtx.createOscillator(), g=audioCtx.createGain();
-  o.type=type; o.frequency.setValueAtTime(freq,t0); g.gain.setValueAtTime(vol,t0);
-  g.gain.exponentialRampToValueAtTime(0.0001,t0+dur); o.connect(g); g.connect(audioCtx.destination); o.start(t0); o.stop(t0+dur);
+/* =================== HALF‑LIFE LAUNCHERS =================== */
+function openHL(){
+  const frame = document.getElementById('hlFrame');
+  // Pixelsuft HL (Xash3D FWGS Emscripten)
+  frame.src = "https://pixelsuft.github.io/hl/";
+  setTimeout(()=>frame?.contentWindow?.focus?.(), 800);
 }
-function chord(freqs=[660,880],dur=0.12){ if(audioMuted) return; ensureAudio(); const t0=audioCtx.currentTime,g=audioCtx.createGain(); g.gain.value=.15; g.connect(audioCtx.destination);
-  freqs.forEach(f=>{ const o=audioCtx.createOscillator(); o.type='sine'; o.frequency.value=f; o.connect(g); o.start(t0); o.stop(t0+dur); });
-}
-
-const Sound=(()=>{ // game action SFX (includes footsteps)
-  function noise(dur=.08,vol=.2){ if(audioMuted) return; ensureAudio();
-    const b=audioCtx.createBuffer(1, audioCtx.sampleRate*dur, audioCtx.sampleRate);
-    const d=b.getChannelData(0); for(let i=0;i<d.length;i++) d[i]=Math.random()*2-1;
-    const s=audioCtx.createBufferSource(); const g=audioCtx.createGain(); g.gain.value=vol; s.buffer=b; s.connect(g); g.connect(audioCtx.destination); s.start();
-  }
-  function osc(type,freq,dur,vol=.2){ if(audioMuted) return; ensureAudio();
-    const o=audioCtx.createOscillator(); const g=audioCtx.createGain(); o.type=type; o.frequency.value=freq; g.gain.value=vol;
-    o.connect(g); g.connect(audioCtx.destination); o.start(); g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime+dur); o.stop(audioCtx.currentTime+dur);
-  }
-  let footAlt=0;
-  return {
-    toggle(){ audioMuted=!audioMuted; },
-    ui(){ osc("sine",820,.04,.16); },
-    gun(){ osc("square",120,.06,.25); noise(.05,.14); },
-    empty(){ osc("square",300,.03,.16); },
-    reload(){ osc("triangle",500,.06,.2); osc("triangle",280,.08,.2); },
-    hit(){ osc("square",220,.05,.22); },
-    enemyDeath(){ osc("sawtooth",220,.12,.25); osc("sawtooth",120,.16,.22); },
-    hurt(){ osc("triangle",180,.08,.25); },
-    pickup(){ osc("sine",700,.06,.2); osc("sine",1000,.08,.15); },
-    door(){ osc("triangle",240,.12,.24); },
-    locked(){ osc("square",160,.12,.24); },
-    footstep(){ // short low thunk + noise; alternate pitch for L/R
-      const base = footAlt?135:155; footAlt^=1;
-      osc("triangle", base + (Math.random()*8-4), .035, .22);
-      noise(.02,.09);
-    }
-  };
-})();
-
-function toggleMute(){
-  Sound.toggle();
-  document.getElementById('muteBtn').textContent = audioMuted ? "🔇 Sound: Off" : "🔊 Sound: On";
-  if(!audioMuted) beep(880,.06);
-}
-
-/* =================== LOCAL HIGHSCORES =================== */
-const HS_KEY='vistaArcadeScores_v4';
-let HS={snakeBest:0,pongLeftBest:0,pongRightBest:0,clickerBest:0,tttBestMoves:null,tttWins:{X:0,O:0,D:0},rouletteBest:0,doomBestTime:0,doomMaxLevel:1};
-function loadHighScores(){ const raw=localStorage.getItem(HS_KEY); if(raw){ try{const o=JSON.parse(raw); HS=Object.assign(HS,o,{tttWins:Object.assign({X:0,O:0,D:0},o.tttWins||{})});}catch{}} updateHomeHS();}
-function saveHighScores(){ localStorage.setItem(HS_KEY, JSON.stringify(HS)); updateHomeHS(); }
-function updateHomeHS(){ const e=(id,v)=>{const el=document.getElementById(id); if(el) el.textContent=v;};
-  e('hsSnake',HS.snakeBest); e('hsPongL',HS.pongLeftBest); e('hsPongR',HS.pongRightBest); e('hsClicker',HS.clickerBest);
-  e('hsTTTMoves',HS.tttBestMoves??'—'); e('hsTTTX',HS.tttWins.X); e('hsTTTO',HS.tttWins.O); e('hsTTTD',HS.tttWins.D);
-  e('hsRoulette',HS.rouletteBest); e('hsDoomTime',(HS.doomBestTime||0).toFixed?HS.doomBestTime.toFixed(1):HS.doomBestTime); e('hsDoomLevel',HS.doomMaxLevel);
-  e('pongBestL',HS.pongLeftBest); e('pongBestR',HS.pongRightBest); e('snakeBest',HS.snakeBest); e('clickBest',HS.clickerBest);
-  e('doomBest',(HS.doomBestTime||0).toFixed?HS.doomBestTime.toFixed(1):HS.doomBestTime); e('doomLevel',HS.doomMaxLevel);
-}
-function resetHighScores(){ if(!confirm('Reset all local high scores and stats?')) return;
-  HS={snakeBest:0,pongLeftBest:0,pongRightBest:0,clickerBest:0,tttBestMoves:null,tttWins:{X:0,O:0,D:0},rouletteBest:0,doomBestTime:0,doomMaxLevel:1};
-  saveHighScores(); beep(420,.09); beep(320,.09);
+function openHLDemo(){
+  const frame = document.getElementById('hlFrame');
+  // WebXash (has demo buttons for Uplink/Day One in the UI)
+  frame.src = "https://x8bitrain.github.io/webXash/";
+  setTimeout(()=>frame?.contentWindow?.focus?.(), 800);
 }
 
 /* =================== SNAKE =================== */
 const sc=document.getElementById('snakeCanvas'); const sctx=sc.getContext('2d'); const cell=15;
 let snake=[],food={},sdx=cell,sdy=0,sScore=0;
 function snakeReset(){ snake=[{x:150,y:150}]; food={x:Math.floor(Math.random()*20)*cell,y:Math.floor(Math.random()*20)*cell}; sdx=cell;sdy=0;sScore=0;
-  document.getElementById('snakeScore').textContent=sScore; document.getElementById('snakeBest').textContent=HS.snakeBest; }
-document.addEventListener('keydown',e=>{ if(e.key==='ArrowUp'&&sdy===0){sdx=0;sdy=-cell} if(e.key==='ArrowDown'&&sdy===0){sdx=0;sdy=cell}
-  if(e.key==='ArrowLeft'&&sdx===0){sdx=-cell;sdy=0} if(e.key==='ArrowRight'&&sdx===0){sdx=cell;sdy=0} });
+  document.getElementById('snakeScore').textContent=sScore; }
+document.addEventListener('keydown',e=>{ if(e.key==='ArrowUp'&&sdy===0){sdx=0;sdy=-cell}
+  if(e.key==='ArrowDown'&&sdy===0){sdx=0;sdy=cell} if(e.key==='ArrowLeft'&&sdx===0){sdx=-cell;sdy=0}
+  if(e.key==='ArrowRight'&&sdx===0){sdx=cell;sdy=0} });
 setInterval(()=>{ if(!document.getElementById('snake').classList.contains('active')) return;
   const head={x:snake[0].x+sdx,y:snake[0].y+sdy}; const hitWall=head.x<0||head.y<0||head.x>=sc.width||head.y>=sc.height; const hitSelf=snake.some(s=>s.x===head.x&&s.y===head.y);
-  if(hitWall||hitSelf){ beep(160,.12,'square',.2); snakeReset(); return; }
+  if(hitWall||hitSelf){ snakeReset(); return; }
   snake.unshift(head);
-  if(head.x===food.x&&head.y===food.y){ sScore++; if(sScore>HS.snakeBest){HS.snakeBest=sScore; saveHighScores();} document.getElementById('snakeScore').textContent=sScore; document.getElementById('snakeBest').textContent=HS.snakeBest; chord([660,990],.09);
+  if(head.x===food.x&&head.y===food.y){ sScore++; document.getElementById('snakeScore').textContent=sScore;
     food={x:Math.floor(Math.random()*20)*cell,y:Math.floor(Math.random()*20)*cell}; } else snake.pop();
   sctx.clearRect(0,0,sc.width,sc.height); sctx.fillStyle="#39ff14"; snake.forEach(s=>sctx.fillRect(s.x,s.y,cell,cell)); sctx.fillStyle="#ff5252"; sctx.fillRect(food.x,food.y,cell,cell);
 },140);
@@ -413,25 +308,23 @@ let lp=90,rp=90,bx=pc.width/2,by=pc.height/2,bvx=2.2,bvy=2.2,ls=0,rs=0;
 document.addEventListener('keydown',e=>{ if(e.key==='w') lp-=12; if(e.key==='s') lp+=12; if(e.key==='ArrowUp') rp-=12; if(e.key==='ArrowDown') rp+=12;
   lp=Math.max(0,Math.min(pc.height-50,lp)); rp=Math.max(0,Math.min(pc.height-50,rp)); });
 function pongResetBall(dir=(Math.random()<.5?-1:1)){ bx=pc.width/2; by=pc.height/2; bvx=2.2*dir; bvy=(Math.random()<.5?2.2:-2.2); }
-function pongResetMatch(){ if(ls>HS.pongLeftBest){HS.pongLeftBest=ls;saveHighScores()} if(rs>HS.pongRightBest){HS.pongRightBest=rs;saveHighScores()} ls=0;rs=0;pongResetBall(); beep(400,.08); beep(300,.08); }
+function pongResetMatch(){ ls=0; rs=0; pongResetBall(); }
 setInterval(()=>{ if(!document.getElementById('pong').classList.contains('active')) return;
-  bx+=bvx; by+=bvy; if(by<0||by>pc.height){ bvy*=-1; beep(320,.05); }
-  if(bx<12&&by>lp&&by<lp+50){ bvx*=-1.06; beep(660,.06); } if(bx>pc.width-12&&by>rp&&by<rp+50){ bvx*=-1.06; beep(660,.06); }
-  if(bx<0){ rs++; if(rs>HS.pongRightBest){HS.pongRightBest=rs;saveHighScores()} beep(200,.09); pongResetBall(1); }
-  if(bx>pc.width){ ls++; if(ls>HS.pongLeftBest){HS.pongLeftBest=ls;saveHighScores()} beep(200,.09); pongResetBall(-1); }
+  bx+=bvx; by+=bvy; if(by<0||by>pc.height){ bvy*=-1; }
+  if(bx<12&&by>lp&&by<lp+50){ bvx*=-1.06; } if(bx>pc.width-12&&by>rp&&by<rp+50){ bvx*=-1.06; }
+  if(bx<0){ rs++; pongResetBall(1); } if(bx>pc.width){ ls++; pongResetBall(-1); }
   pctx.clearRect(0,0,pc.width,pc.height); pctx.fillStyle="#fff"; pctx.fillRect(6,lp,6,50); pctx.fillRect(pc.width-12,rp,6,50);
   pctx.beginPath(); pctx.arc(bx,by,4,0,Math.PI*2); pctx.fill(); pctx.globalAlpha=.15; pctx.fillRect(pc.width/2-1,0,2,pc.height); pctx.globalAlpha=1;
-  document.getElementById('pongScore').textContent=`${ls} : ${rs}`; document.getElementById('pongBestL').textContent=HS.pongLeftBest; document.getElementById('pongBestR').textContent=HS.pongRightBest;
+  document.getElementById('pongScore').textContent=`${ls} : ${rs}`;
 },16);
 
 /* =================== TIC TAC TOE =================== */
-let tBoard=Array(9).fill(""),tPlayer="X",tOver=false,tMoves=0; const tb=document.getElementById('ttt-board');
-function tttReset(){ tBoard=Array(9).fill(""); tPlayer="X"; tOver=false; tMoves=0; document.getElementById('ttt-status').textContent="X to move"; drawTTT(); }
+let tBoard=Array(9).fill(""),tPlayer="X",tOver=false; const tb=document.getElementById('ttt-board');
+function tttReset(){ tBoard=Array(9).fill(""); tPlayer="X"; tOver=false; document.getElementById('ttt-status').textContent="X to move"; drawTTT(); }
 function drawTTT(){ tb.innerHTML=""; tBoard.forEach((v,i)=>{ const b=document.createElement('button'); b.textContent=v; b.disabled=!!v||tOver; b.onclick=()=>moveTTT(i); tb.appendChild(b); }); }
-function moveTTT(i){ if(tOver||tBoard[i]) return; tBoard[i]=tPlayer; tMoves++; beep(540,.05);
-  if(winTTT(tPlayer)){ document.getElementById('ttt-status').textContent=`${tPlayer} wins!`; tOver=true; chord([880,1100],.12);
-    if(!HS.tttBestMoves||tMoves<HS.tttBestMoves){HS.tttBestMoves=tMoves;} HS.tttWins[tPlayer]++; saveHighScores(); updateHomeHS();
-  } else if(tBoard.every(Boolean)){ document.getElementById('ttt-status').textContent="Draw"; tOver=true; beep(260,.1); HS.tttWins.D++; saveHighScores(); updateHomeHS();
+function moveTTT(i){ if(tOver||tBoard[i]) return; tBoard[i]=tPlayer;
+  if(winTTT(tPlayer)){ document.getElementById('ttt-status').textContent=`${tPlayer} wins!`; tOver=true;
+  } else if(tBoard.every(Boolean)){ document.getElementById('ttt-status').textContent="Draw"; tOver=true;
   } else { tPlayer=(tPlayer==="X")?"O":"X"; document.getElementById('ttt-status').textContent=`${tPlayer} to move`; }
   drawTTT();
 }
@@ -440,13 +333,10 @@ tttReset();
 
 /* =================== CLICKER =================== */
 let cScore=0,cPower=1;
-function updateClickerUI(){ document.getElementById('clickScore').textContent=cScore; document.getElementById('clickPower').textContent=cPower;
-  if(cScore>HS.clickerBest){HS.clickerBest=cScore;saveHighScores()} document.getElementById('clickBest').textContent=HS.clickerBest; }
-function clickGame(){ cScore+=cPower; beep(720,.05); updateClickerUI(); }
-function buy(n){ const cost=n===1?10:50; if(cScore>=cost){ cScore-=cost; cPower+=n; chord([640,820],.08); updateClickerUI(); } }
-function clickerReset(){ cScore=0;cPower=1;updateClickerUI(); beep(300,.06); }
-function clickerSave(){ localStorage.setItem('vistaArcadeClicker',JSON.stringify({cScore,cPower})); chord([700,900],.1); }
-function clickerLoad(){ const raw=localStorage.getItem('vistaArcadeClicker'); if(raw){ try{const o=JSON.parse(raw); cScore=o.cScore|0; cPower=o.cPower|0;}catch{} } updateClickerUI(); beep(500,.06); }
+function updateClickerUI(){ document.getElementById('clickScore').textContent=cScore; document.getElementById('clickPower').textContent=cPower; }
+function clickGame(){ cScore+=cPower; updateClickerUI(); }
+function buy(n){ const cost=n===1?10:50; if(cScore>=cost){ cScore-=cost; cPower+=n; updateClickerUI(); } }
+function clickerReset(){ cScore=0;cPower=1;updateClickerUI(); }
 
 /* =================== ROULETTE (safe) =================== */
 const cylEl=document.getElementById('cylinder'); let rollPos=0,bulletPos=0,rollStreak=0;
@@ -455,343 +345,14 @@ function drawCylinder(){ cylEl.innerHTML=""; const layout=[0,1,2,3,4,5];
     const armed=(idx===rollPos); d.style.background=armed?'radial-gradient(circle at 30% 30%,#fff,#8ef 35%,#2b89ff 65%,#09306f 100%)':'radial-gradient(circle at 30% 30%,#fff,#eef 35%,#bcd 65%,#567 100%)';
     d.style.boxShadow='inset 0 0 0 2px rgba(255,255,255,.5), 0 6px 16px rgba(0,0,0,.35)'; d.style.display='grid'; d.style.placeItems='center'; d.style.color='#012'; d.style.fontWeight='700';
     d.textContent=idx+1; cylEl.appendChild(d); if(idx===2) cylEl.appendChild(document.createElement('div')); });
-  document.getElementById('rollPos').textContent=rollPos+1; document.getElementById('rollStreak').textContent=rollStreak; document.getElementById('rollBest').textContent=HS.rouletteBest;
+  document.getElementById('rollPos').textContent=rollPos+1; document.getElementById('rollStreak').textContent=rollStreak;
 }
 function rouletteReset(){ rollPos=Math.floor(Math.random()*6); bulletPos=Math.floor(Math.random()*6); rollStreak=0; document.getElementById('rouletteMsg').textContent=''; drawCylinder(); }
-function rouletteSpin(){ bulletPos=Math.floor(Math.random()*6); rollPos=Math.floor(Math.random()*6); document.getElementById('rouletteMsg').textContent='You spun the cylinder.'; chord([700,900],.09); drawCylinder(); }
-function rouletteAdvance(){ rollPos=(rollPos+1)%6; document.getElementById('rouletteMsg').textContent='Advanced chamber.'; beep(520,.06); drawCylinder(); }
-function roulettePull(){ if(rollPos===bulletPos){ document.getElementById('rouletteMsg').textContent='💥 Bang! You lost this round.'; beep(440,.06,'square',.22); setTimeout(()=>beep(320,.08,'square',.22),70); rollStreak=0; bulletPos=Math.floor(Math.random()*6);
-  }else{ document.getElementById('rouletteMsg').textContent='🟢 Click. You survived!'; rollStreak++; if(rollStreak>HS.rouletteBest){HS.rouletteBest=rollStreak;saveHighScores()} chord([720,1000],.09); } drawCylinder(); }
+function rouletteSpin(){ bulletPos=Math.floor(Math.random()*6); rollPos=Math.floor(Math.random()*6); document.getElementById('rouletteMsg').textContent='You spun the cylinder.'; drawCylinder(); }
+function rouletteAdvance(){ rollPos=(rollPos+1)%6; document.getElementById('rouletteMsg').textContent='Advanced chamber.'; drawCylinder(); }
+function roulettePull(){ if(rollPos===bulletPos){ document.getElementById('rouletteMsg').textContent='💥 Bang! (reset)'; rollStreak=0; bulletPos=Math.floor(Math.random()*6);
+  }else{ document.getElementById('rouletteMsg').textContent='🟢 Click. Survived!'; rollStreak++; } drawCylinder(); }
 rouletteReset();
-
-/* =================== 3D SHOOTER (raycaster with SFX + footsteps) =================== */
-/* Sprites (SVG data URIs) */
-const SPRITES={
-  enemy:{
-    grunt:'data:image/svg+xml;utf8,'+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="64" height="96"><rect width="64" height="96" fill="#000"/><circle cx="32" cy="18" r="10" fill="#777"/><rect x="22" y="30" width="20" height="40" rx="8" fill="#777"/></svg>`),
-    runner:'data:image/svg+xml;utf8,'+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="64" height="96"><rect width="64" height="96" fill="#000"/><circle cx="32" cy="18" r="10" fill="#ff5252"/><rect x="24" y="30" width="16" height="36" rx="8" fill="#ff5252"/></svg>`),
-    heavy:'data:image/svg+xml;utf8,'+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="64" height="96"><rect width="64" height="96" fill="#000"/><circle cx="32" cy="16" r="12" fill="#ffb300"/><rect x="18" y="28" width="28" height="44" rx="10" fill="#ffb300"/></svg>`)
-  },
-  gunIdle:[
-    'data:image/svg+xml;utf8,'+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="220" height="140"><rect width="220" height="140" fill="none"/><g transform="translate(10,12)"><rect x="40" y="40" width="140" height="22" rx="6" fill="#99b0c9" stroke="#2b3e55" stroke-width="2"/><rect x="56" y="28" width="18" height="10" rx="2" fill="#eaf2ff"/></g></svg>`),
-    'data:image/svg+xml;utf8,'+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="220" height="140"><rect width="220" height="140" fill="none"/><g transform="translate(10,14)"><rect x="40" y="40" width="140" height="22" rx="6" fill="#a6bdd3" stroke="#2b3e55" stroke-width="2"/><rect x="56" y="28" width="18" height="10" rx="2" fill="#eaf2ff"/></g></svg>`),
-    'data:image/svg+xml;utf8,'+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="220" height="140"><rect width="220" height="140" fill="none"/><g transform="translate(10,10)"><rect x="40" y="40" width="140" height="22" rx="6" fill="#8aa2bf" stroke="#2b3e55" stroke-width="2"/><rect x="56" y="28" width="18" height="10" rx="2" fill="#eaf2ff"/></g></svg>`)
-  ],
-  gunFire:[
-    'data:image/svg+xml;utf8,'+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="220" height="140"><rect width="220" height="140" fill="none"/><g transform="translate(10,16)"><rect x="40" y="40" width="140" height="22" rx="6" fill="#99b0c9" stroke="#2b3e55" stroke-width="2"/><circle cx="200" cy="52" r="18" fill="url(#f)"/></g><defs><radialGradient id="f" cx="1" cy=".5" r=".6"><stop offset="0" stop-color="#fff"/><stop offset=".5" stop-color="#ffd572"/><stop offset="1" stop-color="rgba(255,180,50,0)"/></radialGradient></defs></svg>`),
-    'data:image/svg+xml;utf8,'+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="220" height="140"><rect width="220" height="140" fill="none"/><g transform="translate(10,18)"><rect x="40" y="40" width="140" height="22" rx="6" fill="#a6bdd3" stroke="#2b3e55" stroke-width="2"/><circle cx="200" cy="52" r="14" fill="url(#f)"/></g><defs><radialGradient id="f" cx="1" cy=".5" r=".6"><stop offset="0" stop-color="#fff"/><stop offset=".5" stop-color="#ffd572"/><stop offset="1" stop-color="rgba(255,180,50,0)"/></radialGradient></defs></svg>`),
-    'data:image/svg+xml;utf8,'+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="220" height="140"><rect width="220" height="140" fill="none"/><g transform="translate(10,12)"><rect x="40" y="40" width="140" height="22" rx="6" fill="#8aa2bf" stroke="#2b3e55" stroke-width="2"/></g></svg>`)
-  ],
-  pickupHealth:'data:image/svg+xml;utf8,'+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48"><rect width="48" height="48" rx="8" fill="#e53935"/><rect x="20" y="8" width="8" height="32" fill="#fff"/><rect x="8" y="20" width="32" height="8" fill="#fff"/></svg>`),
-  pickupAmmo:'data:image/svg+xml;utf8,'+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48"><rect width="48" height="48" rx="8" fill="#ffb300"/><rect x="10" y="14" width="28" height="20" rx="6" fill="#5d4037"/><rect x="16" y="20" width="16" height="8" fill="#d7ccc8"/></svg>`),
-  pickupArmor:'data:image/svg+xml;utf8,'+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48"><rect width="48" height="48" rx="8" fill="#1e88e5"/><path d="M8 10h32v16c0 10-8 14-16 18C16 40 8 36 8 26z" fill="#90caf9" stroke="#0d47a1"/></svg>`)
-};
-function loadImage(src){ const img=new Image(); img.src=src; return img; }
-const IMG={
-  enemies:{ grunt:loadImage(SPRITES.enemy.grunt), runner:loadImage(SPRITES.enemy.runner), heavy:loadImage(SPRITES.enemy.heavy) },
-  gunIdle:SPRITES.gunIdle.map(loadImage),
-  gunFire:SPRITES.gunFire.map(loadImage),
-  health:loadImage(SPRITES.pickupHealth),
-  ammo:loadImage(SPRITES.pickupAmmo),
-  armor:loadImage(SPRITES.pickupArmor)
-};
-
-const doom={
-  W:420,H:260,TILE:64,FOV:Math.PI/3,depth:16*64,
-  canvas:document.getElementById('doomCanvas'), ctx:null,
-  mini:document.getElementById('doomMini'), mctx:null,
-  flash:document.getElementById('doomFlash'), gunEl:document.getElementById('doomGun'),
-  map:[], doors:{}, enemies:[], pickups:[],
-  pos:{x:0,y:0}, ang:0, vel:120, hp:100, armor:0, ammo:20, hasKey:false,
-  alive:true, level:1, timeStart:0, last:performance.now(),
-  fireCD:0, fireRate:120, depthBuf:new Float32Array(420),
-  stepTimer:0, prevX:0, prevY:0, // footsteps
-  gpIndex:null, recoil:0, gunState:'idle', gunFrame:0, gunTimer:0
-};
-doom.ctx=doom.canvas.getContext('2d'); doom.mctx=doom.mini.getContext('2d');
-
-/* Inputs */
-const dKeys={};
-document.addEventListener('keydown',e=>{const k=e.key.toLowerCase(); dKeys[k]=true; if(k==='e') doomUse(); if(k==='r') doomReload();});
-document.addEventListener('keyup',e=> dKeys[e.key.toLowerCase()]=false);
-doom.canvas.addEventListener('click',()=>{ doom.canvas.requestPointerLock?.(); doomFire(); });
-document.addEventListener('mousemove',e=>{ if(document.pointerLockElement===doom.canvas){ doom.ang += e.movementX*0.0025;} });
-
-/* Music (procedural) */
-let musicTimer=null,musicStep=0;
-function startDoomMusic(){ if(audioMuted) return; if(musicTimer) return; ensureAudio(); musicStep=0;
-  musicTimer=setInterval(()=>{ const scale=[55,65.41,82.41,110]; const f=scale[musicStep%scale.length]; const beat=(musicStep%8===0); beep(f,.18,'square',beat?.18:.12); musicStep++; },220); }
-function stopDoomMusic(){ if(musicTimer){ clearInterval(musicTimer); musicTimer=null; } }
-
-/* Textures */
-doom.textures=[];
-function buildTextures(){ doom.textures=[]; for(let t=0;t<4;t++){ const tex=document.createElement('canvas'); tex.width=64; tex.height=64; const c=tex.getContext('2d');
-  for(let y=0;y<64;y++){ for(let x=0;x<64;x++){ const stripe=((x>>3)&1); let r=80,g=80,b=80;
-    if(t===0){r=120+stripe*60;g=120;b=140} if(t===1){r=140;g=120+stripe*70;b=120} if(t===2){r=110;g=140;b=110+stripe*60} if(t===3){r=170;g=120;b=90+stripe*50}
-    c.fillStyle=`rgb(${r},${g},${b})`; c.fillRect(x,y,1,1);
-  }} doom.textures.push(tex);} }
-
-/* Procgen level */
-function randInt(a,b){return Math.floor(Math.random()*(b-a+1))+a}
-function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
-function generateLevel(level=1){
-  const rows=18+Math.min(6,Math.floor(level/2)), cols=24+Math.min(8,Math.floor(level/2));
-  let grid=Array.from({length:rows},()=> '1'.repeat(cols).split(''));
-  function carve(r0,c0,h,w){ for(let r=r0;r<r0+h;r++)for(let c=c0;c<c0+w;c++) grid[r][c]='.'; }
-  const rooms=[]; for(let i=0;i<28;i++){ const w=randInt(3,6), h=randInt(3,6), r=randInt(1,rows-h-2), c=randInt(1,cols-w-2); rooms.push({r,c,h,w}); carve(r,c,h,w); }
-  rooms.sort((a,b)=>(a.r+a.c)-(b.r+b.c));
-  for(let i=0;i<rooms.length-1;i++){ const a=rooms[i], b=rooms[i+1]; const ar=randInt(a.r,a.r+a.h-1), ac=randInt(a.c,a.c+a.w-1), br=randInt(b.r,b.r+b.h-1), bc=randInt(b.c,b.c+b.w-1);
-    for(let c=Math.min(ac,bc);c<=Math.max(ac,bc);c++) grid[ar][c]='.'; for(let r=Math.min(ar,br);r<=Math.max(ar,br);r++) grid[r][bc]='.'; }
-  grid[0]=Array(cols).fill('1'); grid[rows-1]=Array(cols).fill('1'); for(let r=0;r<rows;r++){ grid[r][0]='1'; grid[r][cols-1]='1'; }
-  const sRoom=rooms[0]||{r:2,c:2,h:3,w:3}; grid[sRoom.r+1][sRoom.c+1]='P';
-  const eRoom=rooms[rooms.length-1]||{r:rows-3,c:cols-3,h:3,w:3}; grid[eRoom.r+Math.floor(eRoom.h/2)][eRoom.c+Math.floor(eRoom.w/2)]='X';
-  outer:for(let r=eRoom.r-1;r<=eRoom.r+eRoom.h;r++) for(let c=eRoom.c-1;c<=eRoom.c+eRoom.w;c++){
-    if(grid[r]?.[c]==='.' && ((grid[r-1]?.[c]==='1'&&grid[r+1]?.[c]==='1')||(grid[r]?.[c-1]==='1'&&grid[r]?.[c+1]==='1'))){ grid[r][c]='L'; break outer; } }
-  const kRoom=rooms[Math.floor(rooms.length/2)]||sRoom; grid[kRoom.r+Math.floor(kRoom.h/2)][kRoom.c+Math.floor(kRoom.w/2)]='K';
-  for(let i=0;i<5;i++){ const r=randInt(2,rows-3), c=randInt(2,cols-3); if(grid[r][c]==='.' && (grid[r-1][c]==='1'||grid[r+1][c]==='1'||grid[r][c-1]==='1'||grid[r][c+1]==='1')) grid[r][c]='D'; }
-  for(let i=0;i<2;i++){ const r=randInt(2,rows-3), c=randInt(2,cols-3); if(grid[r][c]==='.') grid[r][c]='S'; }
-  const free=[]; for(let r=1;r<rows-1;r++) for(let c=1;c<cols-1;c++){ if(grid[r][c]==='.') free.push({r,c}); }
-  shuffle(free);
-  const enemies=[], pickups=[];
-  const enemyCount=6+Math.floor(level*1.2), hpCount=3+Math.floor(level/2), amCount=4+Math.floor(level/2), arCount=2+Math.floor(level/3);
-  const types=['grunt','runner','heavy'];
-  for(let i=0;i<enemyCount&&free.length;i++){ const t=free.pop(); enemies.push({x:(t.c+0.5)*doom.TILE,y:(t.r+0.5)*doom.TILE,
-      type: types[Math.floor(Math.random()*types.length)], hp:70+level*6, speed: (Math.random()<.3?140:(Math.random()<.6?110:80)), dmg: (Math.random()<.2?16:12),
-      alive:true, cool:0, deadTime:0, hitFlash:0 }); }
-  for(let i=0;i<hpCount&&free.length;i++){ const t=free.pop(); pickups.push({x:(t.c+0.5)*doom.TILE, y:(t.r+0.5)*doom.TILE, type:'health'}); }
-  for(let i=0;i<amCount&&free.length;i++){ const t=free.pop(); pickups.push({x:(t.c+0.5)*doom.TILE, y:(t.r+0.5)*doom.TILE, type:'ammo'}); }
-  for(let i=0;i<arCount&&free.length;i++){ const t=free.pop(); pickups.push({x:(t.c+0.5)*doom.TILE, y:(t.r+0.5)*doom.TILE, type:'armor'}); }
-  return { grid: grid.map(r=>r.join('')), enemies, pickups };
-}
-
-/* Helpers */
-function mapAt(r,c){return doom.map[r]?.[c]??'1'} function isWallCh(ch){return ch>='1'&&ch<='9'}
-function tileAtXY(x,y){ const r=Math.floor(y/doom.TILE), c=Math.floor(x/doom.TILE); return {ch:mapAt(r,c),r,c}; }
-function doorKey(r,c){return r+','+c} function doorOpenAmt(r,c){return doom.doors[doorKey(r,c)]||0} function setDoorOpenAmt(r,c,v){doom.doors[doorKey(r,c)]=Math.max(0,Math.min(1,v))}
-function passableAt(x,y){ const t=tileAtXY(x,y); if(isWallCh(t.ch))return false; if((t.ch==='D'||t.ch==='L')&&doorOpenAmt(t.r,t.c)<.9) return false; return true; }
-function near(a,b,dist){ const dx=a.x-b.x,dy=a.y-b.y; return (dx*dx+dy*dy)<=dist*dist; }
-
-/* Init level */
-function doomInitLevel(proc=true){
-  doom.doors={}; doom.enemies=[]; doom.pickups=[]; doom.hasKey=false; doom.hp=100; doom.armor=Math.max(0,doom.armor);
-  const L=generateLevel(doom.level); doom.map=L.grid; doom.enemies=L.enemies; doom.pickups=L.pickups;
-  for(let r=0;r<doom.map.length;r++)for(let c=0;c<doom.map[r].length;c++){ const ch=doom.map[r][c];
-    if(ch==='P'){ doom.pos.x=(c+0.5)*doom.TILE; doom.pos.y=(r+0.5)*doom.TILE; doom.map[r]=doom.map[r].slice(0,c)+'.'+doom.map[r].slice(c+1); }
-    if(ch==='D'||ch==='L') setDoorOpenAmt(r,c,0);
-  }
-  doom.timeStart=performance.now(); document.getElementById('doomLevel').textContent=doom.level;
-  document.getElementById('doomKey').textContent='No'; document.getElementById('doomHP').textContent=doom.hp;
-  document.getElementById('doomAR').textContent=doom.armor; document.getElementById('doomAmmo').textContent=doom.ammo;
-}
-
-/* Interactions */
-function doomUse(){
-  const ahead={x:doom.pos.x+Math.cos(doom.ang)*36, y:doom.pos.y+Math.sin(doom.ang)*36};
-  const ah=tileAtXY(ahead.x,ahead.y);
-  if(ah.ch==='D'){ const amt=doorOpenAmt(ah.r,ah.c); setDoorOpenAmt(ah.r,ah.c,amt>0?0:1); Sound.door(); return; }
-  if(ah.ch==='L'){ if(doom.hasKey){ setDoorOpenAmt(ah.r,ah.c,1); Sound.door(); } else Sound.locked(); return; }
-  if(ah.ch==='S'){ Object.keys(doom.doors).forEach(k=>{ const v=doom.doors[k]; doom.doors[k]=v>0?0:1; }); chord([640,860],.1); return; }
-}
-function doomReload(){ Sound.reload(); doom.ammo=Math.max(doom.ammo,20); document.getElementById('doomAmmo').textContent=doom.ammo; }
-
-/* Shooting */
-function muzzleFlash(){ doom.flash.style.opacity='1'; setTimeout(()=>doom.flash.style.opacity='0',60); }
-function setGunFrame(list,idx){ doom.gunEl.src=list[idx]?.src||list[idx]; }
-function doomFire(){
-  if(!doom.alive) return;
-  const now=performance.now(); if(now-doom.fireCD<doom.fireRate) return;
-  if(doom.ammo<=0){ Sound.empty(); return; }
-  doom.fireCD=now; doom.ammo--; document.getElementById('doomAmmo').textContent=doom.ammo;
-  doom.gunState='fire'; doom.gunFrame=0; doom.gunTimer=0; muzzleFlash(); Sound.gun();
-
-  // hitscan
-  const step=6,max=doom.depth; let hit=null,best=1e9;
-  for(let d=0;d<max;d+=step){ const x=doom.pos.x+Math.cos(doom.ang)*d, y=doom.pos.y+Math.sin(doom.ang)*d; const t=tileAtXY(x,y);
-    if(isWallCh(t.ch)) break; if((t.ch==='D'||t.ch==='L')&&doorOpenAmt(t.r,t.c)<.9) break;
-    for(const en of doom.enemies){ if(!en.alive) continue; if(Math.abs(en.x-x)<14&&Math.abs(en.y-y)<14){ const dist=(en.x-doom.pos.x)**2+(en.y-doom.pos.y)**2; if(dist<best){best=dist; hit=en;} } }
-  }
-  if(hit){ hit.hp-=40; hit.hitFlash=.12; Sound.hit(); if(hit.hp<=0){ hit.alive=false; hit.deadTime=0; Sound.enemyDeath(); if(Math.random()<.4) doom.pickups.push({x:hit.x,y:hit.y,type:Math.random()<.5?'ammo':'health'}); } }
-}
-
-/* Movement + pickups + footsteps */
-function attemptMove(dx,dy){
-  const nx=doom.pos.x+dx, ny=doom.pos.y+dy;
-  if(passableAt(nx, doom.pos.y)) doom.pos.x=nx;
-  if(passableAt(doom.pos.x, ny)) doom.pos.y=ny;
-
-  // pickups collision
-  for(let i=doom.pickups.length-1;i>=0;i--){
-    const p=doom.pickups[i];
-    if(near(doom.pos,p,26)){
-      if(p.type==='health'){ doom.hp=Math.min(100,doom.hp+25); }
-      if(p.type==='ammo'){ doom.ammo+=15; }
-      if(p.type==='armor'){ doom.armor=Math.min(100,doom.armor+25); }
-      Sound.pickup(); doom.pickups.splice(i,1);
-      document.getElementById('doomHP').textContent=doom.hp; document.getElementById('doomAR').textContent=doom.armor; document.getElementById('doomAmmo').textContent=doom.ammo;
-    }
-  }
-
-  // key on tile
-  const t=tileAtXY(doom.pos.x, doom.pos.y);
-  if(t.ch==='K'){ const m=doom.map.slice(); m[t.r]=m[t.r].slice(0,t.c)+'.'+m[t.r].slice(t.c+1); doom.map=m; doom.hasKey=true; Sound.pickup(); document.getElementById('doomKey').textContent='Yes'; }
-  if(t.ch==='X'){ doom.level++; if(doom.level>HS.doomMaxLevel){HS.doomMaxLevel=doom.level;saveHighScores()} chord([560,760,980],.12); doomInitLevel(true); }
-}
-
-function canSee(ex,ey){
-  const dx=doom.pos.x-ex, dy=doom.pos.y-ey, dist=Math.hypot(dx,dy), steps=Math.ceil(dist/8), ang=Math.atan2(dy,dx);
-  for(let i=0;i<steps;i++){ const x=ex+Math.cos(ang)*i*8, y=ey+Math.sin(ang)*i*8; const t=tileAtXY(x,y); if(isWallCh(t.ch)) return false; if((t.ch==='D'||t.ch==='L')&&doorOpenAmt(t.r,t.c)<.9) return false; }
-  return true;
-}
-
-/* Raycast */
-function castRay(angle){
-  let dist=0, hitTex=0, texX=0;
-  for(let d=0; d<doom.depth; d+=2){
-    const rx=doom.pos.x+Math.cos(angle)*d, ry=doom.pos.y+Math.sin(angle)*d, t=tileAtXY(rx,ry);
-    if(isWallCh(t.ch)){ dist=d; hitTex=((t.ch.charCodeAt(0)-49)%doom.textures.length); const fx=(rx/doom.TILE)%1, fy=(ry/doom.TILE)%1; texX=Math.abs(fx-.5)>Math.abs(fy-.5)?fy:fx; break; }
-    if((t.ch==='D'||t.ch==='L') && doorOpenAmt(t.r,t.c)<.9){ dist=d; hitTex=3; const fx=(rx/doom.TILE)%1, fy=(ry/doom.TILE)%1; texX=Math.abs(fx-.5)>Math.abs(fy-.5)?fy:fx; break; }
-  }
-  return {dist,hitTex,texX};
-}
-function drawColumn(x,h,tex,u,shadow){ const H=doom.H, tw=tex.width, th=tex.height, sx=Math.floor(u*tw)%tw;
-  doom.ctx.drawImage(tex,sx,0,1,th,x,(H/2-h/2)|0,1,h|0); if(shadow>0){ doom.ctx.fillStyle=`rgba(0,0,0,${shadow})`; doom.ctx.fillRect(x,(H/2-h/2)|0,1,h|0); } }
-
-/* Minimap */
-function drawMinimap(){ const m=doom.map, s=doom.mini.width/m[0].length; doom.mctx.clearRect(0,0,doom.mini.width,doom.mini.height);
-  for(let r=0;r<m.length;r++)for(let c=0;c<m[r].length;c++){ const ch=m[r][c]; let col='#1a2e4f';
-    if(isWallCh(ch)) col='#7aa7ff'; if(ch==='D') col=doorOpenAmt(r,c)>.1?'#88cc88':'#cc8844'; if(ch==='L') col='#ff8a65'; if(ch==='K') col='#ffd166'; if(ch==='S') col='#66e6ff'; if(ch==='X') col='#ff6b6b';
-    doom.mctx.fillStyle=col; doom.mctx.fillRect(c*s, r*s, s-0.5, s-0.5);
-  }
-  // enemies
-  doom.mctx.fillStyle='#ff4e50'; for(const en of doom.enemies){ if(!en.alive && en.deadTime>1) continue; doom.mctx.fillRect((en.x/doom.TILE)*s-2,(en.y/doom.TILE)*s-2,4,4); }
-  // pickups
-  for(const p of doom.pickups){ doom.mctx.fillStyle=p.type==='health'?'#e53935':(p.type==='ammo'?'#ffb300':'#1e88e5'); doom.mctx.fillRect((p.x/doom.TILE)*s-2,(p.y/doom.TILE)*s-2,4,4); }
-  // player
-  doom.mctx.fillStyle='#00e676'; doom.mctx.fillRect((doom.pos.x/doom.TILE)*s-2,(doom.pos.y/doom.TILE)*s-2,4,4);
-  doom.mctx.strokeStyle='#00e676'; doom.mctx.beginPath(); doom.mctx.moveTo((doom.pos.x/doom.TILE)*s,(doom.pos.y/doom.TILE)*s);
-  doom.mctx.lineTo((doom.pos.x/doom.TILE)*s+Math.cos(doom.ang)*10,(doom.pos.y/doom.TILE)*s+Math.sin(doom.ang)*10); doom.mctx.stroke();
-}
-
-/* Gamepad polling */
-let gpPoll=null;
-function pollGamepad(){ const pads=navigator.getGamepads?.()||[]; if(doom.gpIndex==null){ for(let i=0;i<pads.length;i++){ if(pads[i]){ doom.gpIndex=i; break; } } }
-  const gp=pads[doom.gpIndex||0]; if(!gp) return;
-  const lx=gp.axes[0]||0, ly=gp.axes[1]||0, rx=gp.axes[2]||0;
-  const nx=Math.cos(doom.ang), ny=Math.sin(doom.ang); const dt=(performance.now()-doom.last)/1000; const sp=doom.vel*dt;
-  if(Math.abs(ly)>.15){ attemptMove(nx * -ly * sp, ny * -ly * sp); }
-  if(Math.abs(lx)>.15){ attemptMove(ny * lx * sp, -nx * lx * sp); }
-  if(Math.abs(rx)>.1){ doom.ang += rx*.04; }
-  if(gp.buttons[0]?.pressed) doomFire(); if(gp.buttons[2]?.pressed) doomUse();
-}
-
-/* Main lifecycle */
-function doomReset(resetLevel=false){
-  doom.alive=true; doom.hp=100; doom.armor=0; doom.hasKey=false; doom.ammo=20; doom.fireCD=0; doom.ang=0; doom.recoil=0;
-  doom.gunState='idle'; doom.gunFrame=0; doom.gunTimer=0; doom.stepTimer=0; doom.prevX=0; doom.prevY=0;
-  if(resetLevel) doom.level=1;
-  buildTextures(); doomInitLevel(true);
-  doom.timeStart=performance.now(); document.getElementById('doomBest').textContent=(HS.doomBestTime||0).toFixed(1);
-  document.getElementById('doomKey').textContent='No'; document.getElementById('doomHP').textContent=doom.hp; document.getElementById('doomAR').textContent=doom.armor; document.getElementById('doomAmmo').textContent=doom.ammo;
-  doom.gunEl.src=IMG.gunIdle[0].src; if(!gpPoll) gpPoll=setInterval(pollGamepad,50);
-}
-
-function doomUpdate(dt){
-  const nx=Math.cos(doom.ang), ny=Math.sin(doom.ang), sp=doom.vel*dt;
-  doom.prevX=doom.pos.x; doom.prevY=doom.pos.y;
-  if(dKeys['w']) attemptMove(nx*sp, ny*sp);
-  if(dKeys['s']) attemptMove(-nx*sp, -ny*sp);
-  if(dKeys['a']) attemptMove(ny*sp, -nx*sp);
-  if(dKeys['d']) attemptMove(-ny*sp, nx*sp);
-  if(dKeys[' ']) doomFire();
-
-  // Doors easing
-  for(const k of Object.keys(doom.doors)){ doom.doors[k]=Math.max(0,Math.min(1, doom.doors[k] + dt*(doom.doors[k]>0.5?1:-1) )); }
-
-  // Enemies
-  for(const en of doom.enemies){
-    if(!en.alive){ en.deadTime += dt; continue; }
-    if(en.hitFlash>0) en.hitFlash -= dt;
-    const dx=doom.pos.x-en.x, dy=doom.pos.y-en.y, dist=Math.hypot(dx,dy);
-    if(dist<480 && canSee(en.x,en.y)){
-      const step=Math.min(en.speed*dt, dist-1), ang=Math.atan2(dy,dx), mx=Math.cos(ang)*step, my=Math.sin(ang)*step;
-      if(passableAt(en.x+mx,en.y)) en.x+=mx; if(passableAt(en.x,en.y+my)) en.y+=my;
-      en.cool-=dt; if(dist<60 && en.cool<=0){ en.cool=1.0;
-        let dmg=en.dmg; if(doom.armor>0){ const absorb=Math.floor(dmg*.33); doom.armor=Math.max(0,doom.armor-absorb); dmg-=absorb; document.getElementById('doomAR').textContent=doom.armor; }
-        doom.hp=Math.max(0,doom.hp-dmg); document.getElementById('doomHP').textContent=doom.hp; Sound.hurt();
-      }
-    }
-  }
-  // Death check
-  if(doom.hp<=0 && doom.alive){ doom.alive=false; Sound.enemyDeath(); }
-
-  // Footsteps: based on displacement this frame
-  const moved=Math.hypot(doom.pos.x-doom.prevX, doom.pos.y-doom.prevY); // pixels
-  const moving = moved > 0.1;
-  doom.stepTimer -= dt;
-  if(moving && doom.stepTimer<=0){
-    Sound.footstep();
-    // cadence scales with speed (moved is px/frame). Convert to ~steps/sec
-    const pxps = moved/dt; // pixels per second
-    const stepInterval = Math.max(0.18, 0.42 - Math.min(0.22, pxps/600)); // between 0.18..0.42s
-    doom.stepTimer = stepInterval;
-  }
-
-  // Gun animation
-  if(doom.gunState==='fire'){
-    doom.gunTimer+=dt; const idx=Math.min(IMG.gunFire.length-1, Math.floor(doom.gunTimer*18)); setGunFrame(IMG.gunFire, idx);
-    doom.gunEl.style.transform='translateX(-50%) translateY(6px)';
-    if(doom.gunTimer>0.18){ doom.gunState='idle'; doom.gunTimer=0; doom.gunEl.style.transform='translateX(-50%) translateY(0)'; }
-  } else { doom.gunTimer+=dt; const idx=Math.floor((doom.gunTimer*6)%IMG.gunIdle.length); setGunFrame(IMG.gunIdle, idx); }
-}
-
-function doomRender(){
-  const W=doom.W,H=doom.H; doom.ctx.fillStyle="#6b8cff"; doom.ctx.fillRect(0,0,W,H/2); doom.ctx.fillStyle="#222"; doom.ctx.fillRect(0,H/2,W,H/2);
-  for(let x=0;x<W;x++){ const rayAng=doom.ang - doom.FOV/2 + (x/W)*doom.FOV; const res=castRay(rayAng); const corrected=res.dist*Math.cos(rayAng-doom.ang);
-    doom.depthBuf[x]=corrected; const h=Math.min(H,(doom.TILE*H)/Math.max(1,corrected)); const shade=Math.min(.7,corrected/900);
-    const tex=doom.textures[res.hitTex]||doom.textures[0]; drawColumn(x,h,tex,res.texX,shade);
-  }
-  // Sprites (enemies)
-  const sprites=[];
-  for(const en of doom.enemies){
-    const dx=en.x-doom.pos.x, dy=en.y-doom.pos.y, dist=Math.hypot(dx,dy); if(!en.alive && en.deadTime>1.2) continue;
-    const ang=Math.atan2(dy,dx)-doom.ang; const size=Math.min(140,(doom.TILE*200)/Math.max(60,dist)); const sx=Math.tan(ang)*(W/2)+W/2;
-    sprites.push({dist,sx,size,en});
-  }
-  sprites.sort((a,b)=>b.dist-a.dist);
-  for(const s of sprites){
-    const img=IMG.enemies[s.en.type]; const half=s.size/2, start=Math.max(0,Math.floor(s.sx-half)), end=Math.min(W-1,Math.floor(s.sx+half));
-    const yTop=(doom.H/2 - s.size/2)|0; for(let x=start;x<=end;x++){ if(s.dist<doom.depthBuf[x]-4){
-        const u=(x-(s.sx-half))/s.size; doom.ctx.save();
-        let alpha=1; if(!s.en.alive){ alpha=Math.max(0,1 - s.en.deadTime/1.2); } if(s.en.hitFlash>0){ doom.ctx.globalCompositeOperation='screen'; }
-        doom.ctx.globalAlpha=alpha; doom.ctx.drawImage(img, Math.floor(u*img.width),0,1,img.height, x, yTop, 1, s.size|0);
-        doom.ctx.restore();
-    } }
-  }
-  // Pickups
-  for(const p of doom.pickups){
-    const dx=p.x-doom.pos.x, dy=p.y-doom.pos.y, dist=Math.hypot(dx,dy), ang=Math.atan2(dy,dx)-doom.ang;
-    const size=Math.min(80,(doom.TILE*160)/Math.max(60,dist)), sx=Math.tan(ang)*(W/2)+W/2, img=(p.type==='health'?IMG.health:(p.type==='ammo'?IMG.ammo:IMG.armor));
-    const half=size/2,start=Math.max(0,Math.floor(sx-half)),end=Math.min(W-1,Math.floor(sx+half)), yTop=(doom.H/2 - size/2)|0;
-    for(let x=start;x<=end;x++){ if(dist<doom.depthBuf[x]-4){ const u=(x-(sx-half))/size; doom.ctx.drawImage(img,Math.floor(u*img.width),0,1,img.height,x,yTop,1,size|0); } }
-  }
-  // Time/Best
-  const t=performance.now(); const time=Math.max(0,(t - doom.timeStart)/1000); document.getElementById('doomTime').textContent=time.toFixed(1);
-  if(doom.alive && time>(HS.doomBestTime||0)){ HS.doomBestTime=time; saveHighScores(); }
-  drawMinimap();
-}
-
-function doomLoop(ts){
-  if(!document.getElementById('doom').classList.contains('active')){ requestAnimationFrame(doomLoop); doom.last=ts; return; }
-  const dt=(ts - doom.last)/1000; doom.last=ts;
-  doomUpdate(dt); doomRender(); requestAnimationFrame(doomLoop);
-}
-
-/* Boot */
-doom.canvas.width=doom.W; doom.canvas.height=doom.H;
-doomReset(true); doomLoop(performance.now());
-
-/* =================== INIT =================== */
-loadHighScores(); snakeReset(); updateClickerUI();
 </script>
 </body>
 </html>
