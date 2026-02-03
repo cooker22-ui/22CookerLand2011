@@ -1,0 +1,108 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Lambda Menu</title>
+<style>
+:root{--bg:#000;--panel:#050505;--fg:#ff9f1a;--accent:#ffb04d;--line:#222}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);font-family:Tahoma,Verdana,sans-serif;overflow:hidden}
+#bg{position:fixed;inset:0;pointer-events:none;background:radial-gradient(120% 80% at 50% 50%,#101010 0%,#040404 60%,#000 100%)}
+#bg::before{content:"";position:absolute;inset:0;opacity:.25;background-image:linear-gradient(0deg,rgba(255,255,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.03) 1px,transparent 1px);background-size:40px 40px;animation:pan 45s linear infinite}
+#bg::after{content:"";position:absolute;inset:0;opacity:.25;mix-blend-mode:screen;background:repeating-linear-gradient(to bottom,rgba(255,255,255,.05) 0,rgba(255,255,255,.05) 1px,transparent 3px,transparent 4px);animation:scan 8s linear infinite}
+@keyframes pan{to{transform:translate(-40px,-40px)}}
+@keyframes scan{to{transform:translateY(4px)}}
+#app{position:relative;display:flex;height:100%;opacity:0}
+#menu{width:320px;padding:22px;background:linear-gradient(180deg,#0e0e0e,#080808);border-right:1px solid #111}
+#menu h1{margin:0 0 16px;color:var(--accent);letter-spacing:2px}
+.menu{padding:10px;margin:6px 0;cursor:pointer}
+.menu:hover{background:rgba(255,159,26,.12)}
+#content{flex:1;display:grid;place-items:center}
+.panel{width:820px;height:560px;background:var(--panel);border:1px solid var(--line);display:none;position:relative}
+.panel.active{display:block}
+.flex{display:flex;gap:8px;flex-wrap:wrap;padding:10px}
+canvas{background:#000;display:block;margin:8px auto;image-rendering:pixelated}
+button{background:#111;color:var(--fg);border:1px solid #333;padding:6px 10px;cursor:pointer}
+#bar{position:absolute;left:0;right:0;bottom:0;background:#0b0b0b;border-top:1px solid #111;padding:6px;font-family:Consolas,monospace;font-size:12px}
+/* intro */
+#intro{position:fixed;inset:0;background:#000;display:flex;align-items:center;justify-content:center;flex-direction:column;z-index:5}
+#intro .lambda{font-size:48px;letter-spacing:6px;color:var(--accent)}
+#console{width:70%;max-width:720px;height:220px;background:#060606;border:1px solid #141414;margin-top:16px;overflow:hidden}
+#console pre{margin:8px;color:#cfa66b;font-family:Consolas,monospace;font-size:12px}
+.fade{animation:fade .8s forwards}
+@keyframes fade{to{opacity:0}}
+</style>
+</head>
+<body>
+<div id="bg"></div>
+<div id="intro"><div class="lambda">LAMBDA</div><div id="console"><pre id="boot"></pre></div></div>
+<div id="app">
+  <div id="menu">
+    <h1>LAMBDA MENU</h1>
+    <div class="menu" onclick="show('lib')">GAME LIBRARY</div>
+    <div class="menu" onclick="launch()">NEW GAME</div>
+  </div>
+  <div id="content">
+    <div id="lib" class="panel active">
+      <div class="flex">
+        <button onclick="pong(false)">PONG (BOT)</button>
+        <button onclick="pong(true)">PONG (2P)</button>
+        <button onclick="tetris()">TETRIS</button>
+        <button onclick="mines()">MINESWEEPER</button>
+        <button onclick="snake()">SNAKE</button>
+        <button onclick="chance()">CHANCE</button>
+        <button onclick="ray('doom')">DOOM‑STYLE</button>
+        <button onclick="ray('wolf')">WOLF3D</button>
+        <button onclick="car()">3D CAR</button>
+      </div>
+      <canvas id="cv" width="640" height="420"></canvas>
+      <div id="bar">ready</div>
+    </div>
+  </div>
+</div>
+<script>
+/* ===== intro boot (auto‑cleanup) ===== */
+const bootLines=['initializing...','loading ui...','loading games...','ready'];let bi=0;const b=document.getElementById('boot');
+const it=setInterval(()=>{b.textContent+=bootLines[bi++]+'
+';if(bi>=bootLines.length){clearInterval(it);setTimeout(()=>{intro.classList.add('fade');setTimeout(()=>{intro.remove();app.style.opacity=1},800)},700)}},180);
+/* ===== helpers ===== */
+const cv=document.getElementById('cv'),ctx=cv.getContext('2d');let rafId=null;function stop(){if(rafId)cancelAnimationFrame(rafId);rafId=null;cv.onmousemove=cv.onclick=null;document.onkeydown=null;ctx.clearRect(0,0,cv.width,cv.height)}
+function show(id){document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));document.getElementById(id).classList.add('active')}
+function launch(){location.href='pixelsuft://launcher'}
+/* ===== PONG ===== */
+function pong(two){stop();let p1=180,p2=180,b={x:320,y:210,vx:4,vy:3};cv.onmousemove=e=>{if(!two){const r=cv.getBoundingClientRect();p1=e.clientY-r.top-30}};
+rafId=requestAnimationFrame(function f(){ctx.clearRect(0,0,640,420);b.x+=b.vx;b.y+=b.vy;if(b.y<0||b.y>414)b.vy*=-1;if(b.x<20&&b.y>p1&&b.y<p1+60)b.vx*=-1;if(b.x>620&&b.y>p2&&b.y<p2+60)b.vx*=-1;if(!two)p2+=(b.y-p2-30)*.05;ctx.fillStyle='#ff9f1a';ctx.fillRect(10,p1,10,60);ctx.fillRect(620,p2,10,60);ctx.fillRect(b.x,b.y,6,6);rafId=requestAnimationFrame(f)})}
+/* ===== TETRIS (polished mini) ===== */
+function tetris(){stop();const COLS=10,ROWS=20,S=20,ox=220,oy=10;let grid=Array.from({length:ROWS},()=>Array(COLS).fill(0));
+const SH=[[[1,1,1,1]],[[1,1],[1,1]],[[0,1,0],[1,1,1]],[[1,1,0],[0,1,1]],[[0,1,1],[1,1,0]]];
+let p={m:JSON.parse(JSON.stringify(SH[Math.random()*SH.length|0])),x:3,y:-1};
+function col(px,py,m){for(let y=0;y<m.length;y++)for(let x=0;x<m[0].length;x++)if(m[y][x]){const gx=px+x,gy=py+y;if(gx<0||gx>=COLS||gy>=ROWS||(gy>=0&&grid[gy][gx]))return true}return false}
+function lock(){for(let y=0;y<p.m.length;y++)for(let x=0;x<p.m[0].length;x++)if(p.m[y][x]&&p.y+y>=0)grid[p.y+y][p.x+x]=1;clear();spawn()}
+function clear(){for(let y=ROWS-1;y>=0;y--)if(grid[y].every(v=>v)){grid.splice(y,1);grid.unshift(Array(COLS).fill(0));y++}}
+function spawn(){p={m:JSON.parse(JSON.stringify(SH[Math.random()*SH.length|0])),x:3,y:-1}}
+let drop=0;document.onkeydown=e=>{if(e.key==='ArrowLeft'&&!col(p.x-1,p.y,p.m))p.x--;if(e.key==='ArrowRight'&&!col(p.x+1,p.y,p.m))p.x++;if(e.key==='ArrowDown'){if(!col(p.x,p.y+1,p.m))p.y++;else lock()}}
+rafId=requestAnimationFrame(function f(t){ctx.clearRect(0,0,640,420);drop+=16;if(drop>500){drop=0;if(!col(p.x,p.y+1,p.m))p.y++;else lock()}
+ctx.strokeStyle='#222';ctx.strokeRect(ox-4,oy-4,COLS*S+8,ROWS*S+8);
+for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++)if(grid[y][x]){ctx.fillStyle='#ff9f1a';ctx.fillRect(ox+x*S,oy+y*S,S-1,S-1)}
+for(let y=0;y<p.m.length;y++)for(let x=0;x<p.m[0].length;x++)if(p.m[y][x]){ctx.fillStyle='#ff9f1a';ctx.fillRect(ox+(p.x+x)*S,oy+(p.y+y)*S,S-1,S-1)}
+rafId=requestAnimationFrame(f)})}
+/* ===== MINES ===== */
+function mines(){stop();const N=8,S=40;const m=Array.from({length:N*N},()=>Math.random()<.15);cv.onclick=e=>{const r=cv.getBoundingClientRect();const x=(e.clientX-r.left)/S|0,y=(e.clientY-r.top)/S|0;ctx.fillStyle=m[y*N+x]?'#800':'#080';ctx.fillRect(x*S,y*S,S,S)};ctx.strokeStyle='#333';for(let y=0;y<N;y++)for(let x=0;x<N;x++)ctx.strokeRect(x*S,y*S,S,S)}
+/* ===== SNAKE ===== */
+function snake(){stop();let h={x:320,y:210},t={x:100,y:100};cv.onmousemove=e=>{const r=cv.getBoundingClientRect();t.x=e.clientX-r.left;t.y=e.clientY-r.top};
+rafId=requestAnimationFrame(function f(){ctx.clearRect(0,0,640,420);h.x+=(t.x-h.x)*.05;h.y+=(t.y-h.y)*.05;ctx.fillStyle='#ff9f1a';ctx.fillRect(h.x,h.y,10,10);rafId=requestAnimationFrame(f)})}
+/* ===== CHANCE ===== */
+function chance(){stop();let c=Math.random()*6|0,i=0;cv.onclick=()=>{ctx.clearRect(0,0,640,420);ctx.fillStyle='#ff9f1a';ctx.fillText(i===c?'LOSE':'SAFE',300,210);i++}}
+/* ===== RAYCASTER + ENEMIES ===== */
+function ray(mode){stop();const map=['1111111111','1000000001','1011111101','1001000101','1001000101','1000000001','1011111101','1000000001','1000000001','1111111111'];let px=5,py=5,pa=0;const fov=Math.PI/3;const enemies=[{x:7,y:5},{x:3,y:7}];
+document.onkeydown=e=>{if(e.key==='a')pa-=.1;if(e.key==='d')pa+=.1;if(e.key==='w'){px+=Math.cos(pa)*.15;py+=Math.sin(pa)*.15}if(e.key==='s'){px-=Math.cos(pa)*.15;py-=Math.sin(pa)*.15}};
+rafId=requestAnimationFrame(function f(){ctx.clearRect(0,0,640,420);for(let x=0;x<640;x++){const ra=(pa-fov/2)+(x/640)*fov;let d=0;while(d<20){d+=.05;const rx=(px+Math.cos(ra)*d)|0,ry=(py+Math.sin(ra)*d)|0;if(map[ry][rx]==='1')break}const h=420/(d*.9);ctx.fillStyle=mode==='doom'?`rgb(${200-d*10},80,80)`:'#bbb';ctx.fillRect(x,210-h/2,1,h)}
+for(const e of enemies){const dx=e.x-px,dy=e.y-py,dist=Math.hypot(dx,dy),ang=Math.atan2(dy,dx)-pa;if(Math.abs(ang)<fov/2){const sx=(ang/(fov/2))*320+320,sz=420/(dist*1.2);ctx.fillStyle='#0f0';ctx.fillRect(sx-sz/4,210-sz/2,sz/2,sz)}}
+rafId=requestAnimationFrame(f)})}
+/* ===== CAR ===== */
+function car(){stop();let speed=0,steer=0;document.onkeydown=e=>{if(e.key==='ArrowUp')speed=Math.min(speed+.2,4);if(e.key==='ArrowLeft')steer=-1;if(e.key==='ArrowRight')steer=1};
+rafId=requestAnimationFrame(function f(){ctx.clearRect(0,0,640,420);ctx.fillStyle='#003';ctx.fillRect(0,0,640,210);ctx.fillStyle='#030';ctx.fillRect(0,210,640,210);for(let y=0;y<210;y++){const p=y/210,w=200+400*p,x=320-w/2+steer*20*p;ctx.fillStyle='#444';ctx.fillRect(x,210+y,w,2)}speed*=.98;rafId=requestAnimationFrame(f)})}
+</script>
+</body>
+</html>
