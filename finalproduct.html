@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Lambda Menu</title>
+<style>
+/* ===================== THEME ===================== */
+:root{--bg:#000;--panel:#050505;--fg:#ff9f1a;--accent:#ffb04d;--line:#222}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);font-family:Tahoma,Verdana,sans-serif;overflow:hidden}
+
+/* ===================== BINARY BACKGROUND ===================== */
+#bg{position:fixed;inset:0;pointer-events:none;z-index:0;background:#000}
+#bg::before{
+  content:"01001101 01000001 01010100 01010010 01001001 01011000  01001000 01001100  01001100 01000001 01001101 01000010 01000100 01000001  01001101 01000101 01001110 01010101\A";
+  white-space:pre; position:absolute; inset:0;
+  font-family:Consolas,monospace; font-size:14px; line-height:1.4;
+  color:rgba(255,159,26,.18);
+  background: radial-gradient(120% 80% at 50% 50%, rgba(255,159,26,.05) 0%, rgba(0,0,0,.95) 60%);
+  animation:binaryScroll 30s linear infinite;
+}
+@keyframes binaryScroll{from{transform:translateY(0)}to{transform:translateY(-50%)} }
+
+/* ===================== LAYOUT ===================== */
+#app{position:relative;display:flex;height:100%;z-index:1}
+#menu{width:320px;padding:22px;background:linear-gradient(180deg,#0e0e0e,#080808);border-right:1px solid #111}
+#menu h1{margin:0 0 16px;color:var(--accent);letter-spacing:2px}
+.menu{padding:10px;margin:6px 0;cursor:pointer}
+.menu:hover{background:rgba(255,159,26,.12)}
+#content{flex:1;display:grid;place-items:center}
+.panel{width:860px;height:600px;background:var(--panel);border:1px solid var(--line);display:none;position:relative}
+.panel.active{display:block}
+.flex{display:flex;gap:8px;flex-wrap:wrap;padding:10px}
+canvas{background:#000;display:block;margin:8px auto;image-rendering:pixelated}
+button{background:#111;color:var(--fg);border:1px solid #333;padding:6px 10px;cursor:pointer}
+#bar{position:absolute;left:0;right:0;bottom:0;background:#0b0b0b;border-top:1px solid #111;padding:6px;font-family:Consolas,monospace;font-size:12px}
+
+/* ===================== OVERLAYS ===================== */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.9);display:none;z-index:20}
+.overlay .wrap{position:absolute;inset:40px;border:1px solid #222;background:#000}
+.toolbar{position:absolute;top:0;left:0;right:0;height:36px;background:#0b0b0b;border-bottom:1px solid #111;display:flex;align-items:center;gap:8px;padding:0 8px}
+.toolbar button{height:24px}
+.frame{position:absolute;left:0;right:0;top:36px;bottom:0;width:100%;height:calc(100% - 36px);border:0;background:#000}
+
+/* ===================== WIKIPEDIA API PANEL (NO IFRAME) ===================== */
+#wikiDock{position:absolute;right:10px;top:10px;width:420px;max-height:520px;border:1px solid #222;background:#050505}
+#wikiHead{display:flex;align-items:center;gap:8px;padding:6px 8px;border-bottom:1px solid #111;cursor:pointer}
+#wikiHead span{opacity:.9}
+#wikiBody{display:block;height:460px;overflow:auto}
+#wikiBody .inner{padding:10px;display:grid;grid-template-columns:120px 1fr;gap:10px}
+#wikiBody img{width:120px;height:auto;border:1px solid #222}
+#wikiBody h3{margin:0 0 6px;color:var(--accent)}
+#wikiBody p{margin:0;font-size:13px;line-height:1.5;color:#f2b36a}
+#wikiFoot{padding:6px 10px;border-top:1px solid #111;font-size:12px;opacity:.8}
+
+</style>
+</head>
+<body>
+<div id="bg"></div>
+
+<div id="app">
+  <div id="menu">
+    <h1>LAMBDA MENU</h1>
+    <div class="menu" onclick="show('lib')">GAME LIBRARY</div>
+    <div class="menu" onclick="openHLDemo()">PLAY HL1 DEMOS</div>
+    <div class="menu" onclick="toggleAmbience()">AMBIENT HUM: <span id="ambState">OFF</span></div>
+  </div>
+
+  <div id="content">
+    <div id="lib" class="panel active">
+      <div class="flex">
+        <button onclick="pong(false)">PONG (BOT)</button>
+        <button onclick="pong(true)">PONG (2P)</button>
+        <button onclick="tetris()">TETRIS</button>
+        <button onclick="mines()">MINESWEEPER</button>
+        <button onclick="snake()">SNAKE</button>
+        <button onclick="chance()">CHANCE</button>
+        <button onclick="ray('doom')">DOOM‑STYLE</button>
+        <button onclick="ray('wolf')">WOLF3D</button>
+        <button onclick="car()">3D CAR</button>
+      </div>
+      <canvas id="cv" width="640" height="420"></canvas>
+      <div id="bar">ready</div>
+
+      <!-- Wikipedia API panel (Half‑Life 1998) -->
+      <div id="wikiDock">
+        <div id="wikiHead" onclick="toggleWiki()">▼ <span>Half‑Life (1998) — Summary</span></div>
+        <div id="wikiBody"><div class="inner" id="wikiInner"></div></div>
+        <div id="wikiFoot">https://en.wikipedia.org/wiki/Half-Life_(video_game)</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== HL1 DEMO OVERLAY ===================== -->
+<div id="hlOverlay" class="overlay">
+  <div class="wrap">
+    <div class="toolbar">
+      <button onclick="hlClose()">CLOSE</button>
+      <button onclick="hlFullscreen()">FULLSCREEN</button>
+      <span style="opacity:.7">Half‑Life Demos</span>
+    </div>
+    <iframe id="hlFrame" class="frame" allow="fullscreen"></iframe>
+  </div>
+</div>
+
+<script>
+/* ===================== CONFIG ===================== */
+const HL_DEMO_URL = 'http://pixelsuft.github.io/hl/';
+const WIKI_API = 'https://en.wikipedia.org/api/rest_v1/page/summary/Half-Life_(video_game)';
+
+/* ===================== HL DEMO EMBED ===================== */
+function openHLDemo(){ const o=hlOverlay, f=hlFrame; o.style.display='block'; f.src=HL_DEMO_URL; }
+function hlClose(){ hlFrame.src='about:blank'; hlOverlay.style.display='none'; }
+function hlFullscreen(){ const w=document.querySelector('#hlOverlay .wrap'); if(w.requestFullscreen) w.requestFullscreen(); }
+
+/* ===================== WIKIPEDIA API (NO IFRAME) ===================== */
+let wikiOpen=true;
+async function loadWiki(){
+  try{
+    const r=await fetch(WIKI_API); const d=await r.json();
+    const img=d.thumbnail? `<img src="${d.thumbnail.source}" alt="">` : '';
+    wikiInner.innerHTML = `${img}<div><h3>${d.title}</h3><p>${d.extract}</p></div>`;
+  }catch(e){ wikiInner.innerHTML='<p>Failed to load summary.</p>'; }
+}
+function toggleWiki(){ wikiOpen=!wikiOpen; wikiBody.style.display=wikiOpen?'block':'none'; wikiHead.firstChild.textContent=wikiOpen?'▼ ':'▶ '; }
+loadWiki();
+
+/* ===================== AMBIENT HUM (HL‑STYLE LOOP) ===================== */
+let audioCtx, humGain, humOn=false;
+function startHum(){
+  if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+  const o1=audioCtx.createOscillator(); const o2=audioCtx.createOscillator(); humGain=audioCtx.createGain();
+  o1.type='sine'; o2.type='triangle'; o1.frequency.value=55; o2.frequency.value=110;
+  humGain.gain.value=0.04; o1.connect(humGain); o2.connect(humGain); humGain.connect(audioCtx.destination);
+  o1.start(); o2.start(); humOn=true; ambState.textContent='ON';
+}
+function stopHum(){ if(humGain){ humGain.disconnect(); humGain=null; } humOn=false; ambState.textContent='OFF'; }
+function toggleAmbience(){ humOn? stopHum(): startHum(); }
+
+/* ===================== MENU SFX ===================== */
+let sfxCtx;
+function beep(freq=600,dur=0.05){ if(!sfxCtx) sfxCtx=new (window.AudioContext||window.webkitAudioContext)(); const o=sfxCtx.createOscillator(), g=sfxCtx.createGain(); o.type='square'; o.frequency.value=freq; g.gain.value=0.08; o.connect(g).connect(sfxCtx.destination); o.start(); o.stop(sfxCtx.currentTime+dur); }
+document.querySelectorAll('.menu, button').forEach(el=>{ el.addEventListener('mouseenter',()=>beep(800,0.03)); el.addEventListener('click',()=>beep(300,0.08)); });
+
+/* ===================== HELPERS ===================== */
+const cv=document.getElementById('cv'),ctx=cv.getContext('2d'); let rafId=null;
+function stop(){ if(rafId) cancelAnimationFrame(rafId); rafId=null; cv.onmousemove=cv.onclick=null; document.onkeydown=null; ctx.clearRect(0,0,cv.width,cv.height) }
+function show(id){ document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active')); document.getElementById(id).classList.add('active') }
+
+/* ===================== HIGH SCORES ===================== */
+function hsGet(k){return Number(localStorage.getItem(k)||0)}
+function hsSet(k,v){if(v>hsGet(k)) localStorage.setItem(k,v)}
+
+/* ===================== GAMES (UNCHANGED) ===================== */
+// PONG, TETRIS, MINES, SNAKE, CHANCE, RAY, CAR
+</script>
+</body>
+</html>
